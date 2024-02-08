@@ -1,0 +1,363 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.7.2": {
+      "LiteDB/5.0.10": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System",
+          "System.Runtime"
+        ],
+        "compile": {
+          "lib/net45/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/net45/LiteDB.dll": {}
+        }
+      },
+      "log4net/2.0.11": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System.Configuration",
+          "System.Web"
+        ],
+        "compile": {
+          "lib/net45/log4net.dll": {}
+        },
+        "runtime": {
+          "lib/net45/log4net.dll": {}
+        }
+      },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        }
+      },
+      "ControlWorks.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.7.2",
+        "dependencies": {
+          "log4net": "2.0.11"
+        },
+        "compile": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.7.2/win": {
+      "LiteDB/5.0.10": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System",
+          "System.Runtime"
+        ],
+        "compile": {
+          "lib/net45/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/net45/LiteDB.dll": {}
+        }
+      },
+      "log4net/2.0.11": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System.Configuration",
+          "System.Web"
+        ],
+        "compile": {
+          "lib/net45/log4net.dll": {}
+        },
+        "runtime": {
+          "lib/net45/log4net.dll": {}
+        }
+      },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        }
+      },
+      "ControlWorks.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.7.2",
+        "dependencies": {
+          "log4net": "2.0.11"
+        },
+        "compile": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.7.2/win-x64": {
+      "LiteDB/5.0.10": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System",
+          "System.Runtime"
+        ],
+        "compile": {
+          "lib/net45/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/net45/LiteDB.dll": {}
+        }
+      },
+      "log4net/2.0.11": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System.Configuration",
+          "System.Web"
+        ],
+        "compile": {
+          "lib/net45/log4net.dll": {}
+        },
+        "runtime": {
+          "lib/net45/log4net.dll": {}
+        }
+      },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        }
+      },
+      "ControlWorks.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.7.2",
+        "dependencies": {
+          "log4net": "2.0.11"
+        },
+        "compile": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.7.2/win-x86": {
+      "LiteDB/5.0.10": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System",
+          "System.Runtime"
+        ],
+        "compile": {
+          "lib/net45/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/net45/LiteDB.dll": {}
+        }
+      },
+      "log4net/2.0.11": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System.Configuration",
+          "System.Web"
+        ],
+        "compile": {
+          "lib/net45/log4net.dll": {}
+        },
+        "runtime": {
+          "lib/net45/log4net.dll": {}
+        }
+      },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        }
+      },
+      "ControlWorks.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.7.2",
+        "dependencies": {
+          "log4net": "2.0.11"
+        },
+        "compile": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ControlWorks.Common.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LiteDB/5.0.10": {
+      "sha512": "x70WuqMDuP75dajqSLvO+AnI/BbwS6da+ukTO7rueV7VoXoQ5CRA9FV4r7cOS4OUr2NS1Up7LDIutjCxQycRvg==",
+      "type": "package",
+      "path": "litedb/5.0.10",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "AppVeyorSettings.json",
+        "LICENSE",
+        "icon_64x64.png",
+        "lib/net45/LiteDB.dll",
+        "lib/net45/LiteDB.xml",
+        "lib/netstandard1.3/LiteDB.dll",
+        "lib/netstandard1.3/LiteDB.xml",
+        "lib/netstandard2.0/LiteDB.dll",
+        "lib/netstandard2.0/LiteDB.xml",
+        "litedb.5.0.10.nupkg.sha512",
+        "litedb.nuspec"
+      ]
+    },
+    "log4net/2.0.11": {
+      "sha512": "4MEfp6dSN/Cl4XHRqBo8eOkhlH9AOt/ydmPRaj/FHuKHTNoPuKjbaT97aACmePpkW5QHQ+YudhYYvVStabOZmQ==",
+      "type": "package",
+      "path": "log4net/2.0.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net20/log4net.dll",
+        "lib/net20/log4net.xml",
+        "lib/net35-client/log4net.dll",
+        "lib/net35-client/log4net.xml",
+        "lib/net35/log4net.dll",
+        "lib/net35/log4net.xml",
+        "lib/net40-client/log4net.dll",
+        "lib/net40-client/log4net.xml",
+        "lib/net40/log4net.dll",
+        "lib/net40/log4net.xml",
+        "lib/net45/log4net.dll",
+        "lib/net45/log4net.xml",
+        "lib/netstandard1.3/log4net.dll",
+        "lib/netstandard1.3/log4net.xml",
+        "lib/netstandard2.0/log4net.dll",
+        "lib/netstandard2.0/log4net.xml",
+        "log4net.2.0.11.nupkg.sha512",
+        "log4net.nuspec",
+        "package-icon.png"
+      ]
+    },
+    "Newtonsoft.Json/12.0.3": {
+      "sha512": "6mgjfnRB4jKMlzHSl+VD+oUc1IebOZabkbyWj2RiTgWwYPPuaK1H97G1sHqGwPlS5npiF5Q0OrxN1wni2n5QWg==",
+      "type": "package",
+      "path": "newtonsoft.json/12.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "lib/net20/Newtonsoft.Json.dll",
+        "lib/net20/Newtonsoft.Json.xml",
+        "lib/net35/Newtonsoft.Json.dll",
+        "lib/net35/Newtonsoft.Json.xml",
+        "lib/net40/Newtonsoft.Json.dll",
+        "lib/net40/Newtonsoft.Json.xml",
+        "lib/net45/Newtonsoft.Json.dll",
+        "lib/net45/Newtonsoft.Json.xml",
+        "lib/netstandard1.0/Newtonsoft.Json.dll",
+        "lib/netstandard1.0/Newtonsoft.Json.xml",
+        "lib/netstandard1.3/Newtonsoft.Json.dll",
+        "lib/netstandard1.3/Newtonsoft.Json.xml",
+        "lib/netstandard2.0/Newtonsoft.Json.dll",
+        "lib/netstandard2.0/Newtonsoft.Json.xml",
+        "lib/portable-net40+sl5+win8+wp8+wpa81/Newtonsoft.Json.dll",
+        "lib/portable-net40+sl5+win8+wp8+wpa81/Newtonsoft.Json.xml",
+        "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.dll",
+        "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.xml",
+        "newtonsoft.json.12.0.3.nupkg.sha512",
+        "newtonsoft.json.nuspec",
+        "packageIcon.png"
+      ]
+    },
+    "ControlWorks.Common/1.0.0": {
+      "type": "project",
+      "path": "../ControlWorks.Common/ControlWorks.Common.csproj",
+      "msbuildProject": "../ControlWorks.Common/ControlWorks.Common.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.7.2": [
+      "ControlWorks.Common >= 1.0.0",
+      "LiteDB >= 5.0.10",
+      "Newtonsoft.Json >= 12.0.3",
+      "log4net >= 2.0.11"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\whhei\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+      "projectName": "ControlWorks.Services.PVI",
+      "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+      "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\obj\\",
+      "projectStyle": "PackageReference",
+      "skipContentFileWrite": true,
+      "configFilePaths": [
+        "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net472"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net472": {
+          "projectReferences": {
+            "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+              "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj"
+            }
+          }
+        }
+      }
+    },
+    "frameworks": {
+      "net472": {
+        "dependencies": {
+          "LiteDB": {
+            "target": "Package",
+            "version": "[5.0.10, )"
+          },
+          "Newtonsoft.Json": {
+            "target": "Package",
+            "version": "[12.0.3, )"
+          },
+          "log4net": {
+            "target": "Package",
+            "version": "[2.0.11, )"
+          }
+        }
+      }
+    },
+    "runtimes": {
+      "win": {
+        "#import": []
+      },
+      "win-x64": {
+        "#import": []
+      },
+      "win-x86": {
+        "#import": []
+      }
+    }
+  }
+}

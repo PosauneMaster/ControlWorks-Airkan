@@ -1,0 +1,14 @@
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\bin\Debug\ControlWorks.Common.dll
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\bin\Debug\ControlWorks.Common.pdb
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\bin\Debug\log4net.dll
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\obj\Debug\ControlWorks.Common.csproj.CoreCompileInputs.cache
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\obj\Debug\ControlWorks.Common.csproj.CopyComplete
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\obj\Debug\ControlWorks.Common.dll
+C:\Users\whhei\Source\Repos\ControlWorks.Services.PVI\ControlWorks.Common\obj\Debug\ControlWorks.Common.pdb
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\bin\Debug\ControlWorks.Common.dll
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\bin\Debug\ControlWorks.Common.pdb
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\bin\Debug\log4net.dll
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\obj\Debug\ControlWorks.Common.csproj.CoreCompileInputs.cache
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\obj\Debug\ControlWorks.Common.csproj.CopyComplete
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\obj\Debug\ControlWorks.Common.dll
+C:\Users\whhei\source\repos\ControlWorks.Verizon\ControlWorks.Common\obj\Debug\ControlWorks.Common.pdb

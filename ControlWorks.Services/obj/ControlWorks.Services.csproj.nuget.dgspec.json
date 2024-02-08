@@ -1,0 +1,325 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services\\ControlWorks.Services.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+        "projectName": "ControlWorks.Services.PVI",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "LiteDB": {
+              "target": "Package",
+              "version": "[5.0.10, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
+            },
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj",
+        "projectName": "ControlWorks.Common",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\ControlWorks.Services.Rest.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\ControlWorks.Services.Rest.csproj",
+        "projectName": "ControlWorks.Services.Rest",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\ControlWorks.Services.Rest.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj"
+              },
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[10.1.1, )"
+            },
+            "LiteDB": {
+              "target": "Package",
+              "version": "[5.0.10, )"
+            },
+            "Microsoft.AspNet.Mvc": {
+              "target": "Package",
+              "version": "[5.2.7, )"
+            },
+            "Microsoft.AspNet.Razor": {
+              "target": "Package",
+              "version": "[3.2.7, )"
+            },
+            "Microsoft.AspNet.WebApi.Client": {
+              "target": "Package",
+              "version": "[5.2.7, )"
+            },
+            "Microsoft.AspNet.WebApi.Core": {
+              "target": "Package",
+              "version": "[5.2.7, )"
+            },
+            "Microsoft.AspNet.WebApi.Owin": {
+              "target": "Package",
+              "version": "[5.2.7, )"
+            },
+            "Microsoft.AspNet.WebApi.OwinSelfHost": {
+              "target": "Package",
+              "version": "[5.2.7, )"
+            },
+            "Microsoft.AspNet.WebPages": {
+              "target": "Package",
+              "version": "[3.2.7, )"
+            },
+            "Microsoft.Owin": {
+              "target": "Package",
+              "version": "[4.1.1, )"
+            },
+            "Microsoft.Owin.Diagnostics": {
+              "target": "Package",
+              "version": "[4.1.1, )"
+            },
+            "Microsoft.Owin.Host.HttpListener": {
+              "target": "Package",
+              "version": "[4.1.1, )"
+            },
+            "Microsoft.Owin.Hosting": {
+              "target": "Package",
+              "version": "[4.1.1, )"
+            },
+            "Microsoft.Owin.SelfHost": {
+              "target": "Package",
+              "version": "[4.1.1, )"
+            },
+            "Microsoft.Web.Infrastructure": {
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
+            },
+            "Owin": {
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "Swagger-Net": {
+              "target": "Package",
+              "version": "[8.3.35.101, )"
+            },
+            "Unity": {
+              "target": "Package",
+              "version": "[5.11.10, )"
+            },
+            "Unity.WebAPI": {
+              "target": "Package",
+              "version": "[5.4.0, )"
+            },
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services\\ControlWorks.Services.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services\\ControlWorks.Services.csproj",
+        "projectName": "ControlWorks.Services",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services\\ControlWorks.Services.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj"
+              },
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj"
+              },
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\ControlWorks.Services.Rest.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.Rest\\ControlWorks.Services.Rest.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "Costura.Fody": {
+              "target": "Package",
+              "version": "[4.1.0, )"
+            },
+            "Topshelf": {
+              "target": "Package",
+              "version": "[4.2.1, )"
+            },
+            "Unity": {
+              "target": "Package",
+              "version": "[5.11.10, )"
+            },
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}

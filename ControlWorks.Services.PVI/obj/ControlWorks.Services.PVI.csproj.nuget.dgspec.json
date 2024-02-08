@@ -1,0 +1,118 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj",
+        "projectName": "ControlWorks.Common",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+        "projectName": "ControlWorks.Services.PVI",
+        "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\ControlWorks.Services.PVI.csproj",
+        "packagesPath": "C:\\Users\\whhei\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Services.PVI\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\whhei\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {
+              "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj": {
+                "projectPath": "C:\\Users\\whhei\\source\\repos\\ControlWorks.Verizon\\ControlWorks.Common\\ControlWorks.Common.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "LiteDB": {
+              "target": "Package",
+              "version": "[5.0.10, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
+            },
+            "log4net": {
+              "target": "Package",
+              "version": "[2.0.11, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
