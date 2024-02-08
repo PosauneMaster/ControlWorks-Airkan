@@ -155,6 +155,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="App_Start\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\ControlWorks.Services.PVI\ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj">
       <Project>{7d3392aa-92e4-4e0e-ac9c-7bc478c4bf5e}</Project>
       <Name>ControlWorks.Services.PVI</Name>
@@ -163,9 +166,6 @@
       <Project>{9720eb0f-048c-4444-ace4-110cdcc89cc1}</Project>
       <Name>ControlWorks.Common</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="App_Start\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -96,20 +96,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ControlWorks.Services.PVI\ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj">
-      <Project>{7d3392aa-92e4-4e0e-ac9c-7bc478c4bf5e}</Project>
-      <Name>ControlWorks.Services.PVI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ControlWorks.Common\ControlWorks.Common.csproj">
-      <Project>{9720eb0f-048c-4444-ace4-110cdcc89cc1}</Project>
-      <Name>ControlWorks.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ControlWorks.Services.Rest\ControlWorks.Services.Rest.csproj">
-      <Project>{f3cce0c7-669f-413c-897c-a60b3ccd5e6d}</Project>
-      <Name>ControlWorks.Services.Rest</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +109,20 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ControlWorks.Services.PVI\ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj">
+      <Project>{7d3392aa-92e4-4e0e-ac9c-7bc478c4bf5e}</Project>
+      <Name>ControlWorks.Services.PVI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ControlWorks.Common\ControlWorks.Common.csproj">
+      <Project>{9720eb0f-048c-4444-ace4-110cdcc89cc1}</Project>
+      <Name>ControlWorks.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ControlWorks.Services.Rest\ControlWorks.Services.Rest.csproj">
+      <Project>{f3cce0c7-669f-413c-897c-a60b3ccd5e6d}</Project>
+      <Name>ControlWorks.Services.Rest</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

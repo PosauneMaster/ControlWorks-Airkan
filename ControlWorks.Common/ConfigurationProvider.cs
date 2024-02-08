@@ -28,6 +28,20 @@ namespace ControlWorks.Common
         public static string ServiceDescription => "ControlWorks wrapper service for REST API";
         public static string ServiceDisplayName => "ControlWorksRESTApi";
         public static string ServiceName => "ControlWorks.Services.Rest";
+        public static string ConnectionMode => ConfigurationManager.AppSettings["ConnectionMode"];
+        public static int AddOrderWaitTime
+        {
+            get
+            {
+                if (Int32.TryParse(ConfigurationManager.AppSettings["AddOrderWaitTime"], out var waitTime))
+                {
+                    return waitTime;
+                }
+
+                return 50;
+            }
+        }
+
 
         private static bool? _verboseVariableLogging = null;
         public static bool VerboseVariableLogging
