@@ -1,9 +1,9 @@
-﻿using System;
-using BR.AN.PviServices;
+﻿using BR.AN.PviServices;
+
 using ControlWorks.Services.PVI.Panel;
 using ControlWorks.Services.PVI.Variables;
 
-using log4net;
+using System;
 
 namespace ControlWorks.Services.PVI.Impl
 {
@@ -22,8 +22,6 @@ namespace ControlWorks.Services.PVI.Impl
 
     public class ServiceWrapper : IServiceWrapper
     {
-        private readonly ILog _log = LogManager.GetLogger("ControlWorksLogger");
-
         private Service _service;
         private PollingService _pollingService;
         private readonly IEventNotifier _eventNotifier;

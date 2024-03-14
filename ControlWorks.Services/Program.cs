@@ -1,24 +1,20 @@
-﻿using System;
-using System.Configuration;
-using System.IO;
-using ControlWorks.Common;
-using log4net;
+﻿using ControlWorks.Common;
+
+using System;
+using System.Diagnostics;
+
 using Topshelf;
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace ControlWorks.Services
 {
 
     class Program
     {
-        private static ILog Log;
-
         public static void Main(string[] args)
         {
             Startup.Initialize();
-            Log = ConfigurationProvider.Logger;
 
-            Log.Info("Starting Service...");
+            Trace.TraceInformation("Starting Service...");
 
             var rc = HostFactory.Run(x =>
             {
@@ -41,16 +37,19 @@ namespace ControlWorks.Services
 
                 x.OnException((exception) =>
                 {
-                    Log.Error("Topshelf service error");
-                    Log.Error(exception.Message, exception);
+                    Trace.TraceError("Topshelf service error");
+                    Trace.TraceError(exception.Message, exception);
                 });
             });
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Log.Fatal("Unhandled Application Domain Error");
-            if (e.ExceptionObject is Exception ex) Log.Fatal(ex.Message, ex);
+            Trace.TraceError("Unhandled Application Domain Error");
+            if (e.ExceptionObject is Exception ex)
+            {
+                Trace.TraceError(ex.Message, ex);
+            }
         }
     }
 }

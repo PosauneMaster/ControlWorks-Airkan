@@ -1,25 +1,23 @@
-﻿using System.Web.Http;
-using ControlWorks.Common;
+﻿using ControlWorks.Common;
 using ControlWorks.Services.PVI.Pvi;
-using ControlWorks.Services.Rest.Models;
-using ControlWorks.Services.Rest.Processors;
 
-using log4net;
 using Microsoft.Owin.Hosting;
+
 using Newtonsoft.Json;
+
 using Owin;
 
 using Swagger.Net.Application;
 
-using Unity;
+using System.Diagnostics;
+using System.Web.Http;
+
 using Unity.WebApi;
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace ControlWorks.Services.Rest
 {
     public class WebApiApplication
     {
-        private static readonly ILog Log = LogManager.GetLogger("ControlWorksLogger");
         public static IPviApplication PviApp { get; private set; }
 
         static WebApiApplication()
@@ -62,7 +60,7 @@ namespace ControlWorks.Services.Rest
 
                 var hostUrl = $"http://*:{ConfigurationProvider.Port}";
 
-                Log.Info($"Starting WebApi at host {hostUrl}");
+                Trace.TraceInformation($"Starting WebApi at host {hostUrl}");
 
                 WebApp.Start<WebApiApplication>(hostUrl);
             }

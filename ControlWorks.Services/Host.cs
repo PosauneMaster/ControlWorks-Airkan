@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 using ControlWorks.Common;
 using ControlWorks.Services.Rest;
-using log4net;
+
 
 
 namespace ControlWorks.Services
@@ -19,7 +20,6 @@ namespace ControlWorks.Services
 
     public class Host : IHost
     {
-        private readonly ILog Log = ConfigurationProvider.Logger;
 
         public void Start()
         {
@@ -35,7 +35,7 @@ namespace ControlWorks.Services
             }
             catch(Exception ex)
             {
-                Log.Error($"Host:Start {ex.Message}", ex);
+                Trace.TraceError($"Host:Start {ex.Message}", ex);
             }
 
         }
@@ -48,7 +48,7 @@ namespace ControlWorks.Services
             }
             catch(Exception ex)
             {
-                Log.Error($"Host:Start {ex.Message}", ex);
+                Trace.TraceError($"Host:Start {ex.Message}", ex);
             }
         }
 

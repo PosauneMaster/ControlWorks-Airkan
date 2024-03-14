@@ -1,13 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-
-using ControlWorks.Common;
-using ControlWorks.Services.PVI.Pvi;
+﻿using ControlWorks.Services.PVI.Pvi;
 using ControlWorks.Services.Rest.Models;
 
-using LiteDB;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ControlWorks.Services.Rest.Processors
 {

@@ -1,26 +1,18 @@
-﻿using System.IO;
-using System.Linq;
-using log4net;
-using log4net.Appender;
+﻿using System.Diagnostics;
+using System.IO;
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 namespace ControlWorks.Common
 {
     public static class Startup
     {
-        private static ILog Log;
         public static void Initialize()
         {
-            const string loggerName = "ControlWorksLogger";
 
-            ConfigurationProvider.Logger = LogManager.GetLogger(loggerName);
-            Log = ConfigurationProvider.Logger;
+            Trace.TraceInformation(new string('*', 30));
+            Trace.TraceInformation("Starting application...");
+            Trace.TraceInformation(new string('*', 30));
 
-            Log.Info(new string('*', 30));
-            Log.Info("Starting application...");
-            Log.Info(new string('*', 30));
-
-            Log.Info("Starting Initialization...");
+            Trace.TraceInformation("Starting Initialization...");
 
 
             if (!Directory.Exists(ConfigurationProvider.BaseDirectory))
@@ -35,37 +27,26 @@ namespace ControlWorks.Common
                 Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
             }
 
-            ConfigurationProvider.LogFilename = GetLogFileName();
-
             WriteStartupLog();
-            Log.Info("Initialization Complete.");
+            Trace.TraceInformation("Initialization Complete.");
         }
 
-        public static string GetLogFileName()
-        {
-            var rootAppender = LogManager.GetRepository()
-                                         .GetAppenders()
-                                         .OfType<RollingFileAppender>()
-                                         .FirstOrDefault(fa => fa.Name == "LogFileAppender");
-
-            return rootAppender != null ? rootAppender.File : string.Empty;
-        }
 
         public static void WriteStartupLog()
         {
-            Log.Info($"BaseDirectory={ConfigurationProvider.BaseDirectory}");
-            Log.Info($"SettingsDirectory={ConfigurationProvider.SettingsDirectory}");
-            Log.Info($"Port={ConfigurationProvider.Port}");
-            Log.Info($"ShutdownTriggerVariable={ConfigurationProvider.ShutdownTriggerVariable}");
-            Log.Info($"SourceStationId={ConfigurationProvider.SourceStationId}");
-            Log.Info($"MessageTimeout={ConfigurationProvider.MessageTimeout}");
-            Log.Info($"LogFilename={ConfigurationProvider.LogFilename}");
-            Log.Info($"ServiceDescription={ConfigurationProvider.ServiceDescription}");
-            Log.Info($"ServiceDisplayName={ConfigurationProvider.ServiceDisplayName}");
-            Log.Info($"ServiceName={ConfigurationProvider.ServiceName}");
-            Log.Info($"SmartConveyorDB={ConfigurationProvider.SmartConveyorDbConnectionString}");
-            Log.Info($"ControlworksSettingsDB={ConfigurationProvider.ControlworksSettingsDbConnectionString}");
-            Log.Info($"ControlworksLogsDB={ConfigurationProvider.ControlworksLogsDbConnectionString}");
+            Trace.TraceInformation($"BaseDirectory={ConfigurationProvider.BaseDirectory}");
+            Trace.TraceInformation($"SettingsDirectory={ConfigurationProvider.SettingsDirectory}");
+            Trace.TraceInformation($"Port={ConfigurationProvider.Port}");
+            Trace.TraceInformation($"ShutdownTriggerVariable={ConfigurationProvider.ShutdownTriggerVariable}");
+            Trace.TraceInformation($"SourceStationId={ConfigurationProvider.SourceStationId}");
+            Trace.TraceInformation($"MessageTimeout={ConfigurationProvider.MessageTimeout}");
+            Trace.TraceInformation($"LogFilename={ConfigurationProvider.LogFilename}");
+            Trace.TraceInformation($"ServiceDescription={ConfigurationProvider.ServiceDescription}");
+            Trace.TraceInformation($"ServiceDisplayName={ConfigurationProvider.ServiceDisplayName}");
+            Trace.TraceInformation($"ServiceName={ConfigurationProvider.ServiceName}");
+            Trace.TraceInformation($"SmartConveyorDB={ConfigurationProvider.SmartConveyorDbConnectionString}");
+            Trace.TraceInformation($"ControlworksSettingsDB={ConfigurationProvider.ControlworksSettingsDbConnectionString}");
+            Trace.TraceInformation($"ControlworksLogsDB={ConfigurationProvider.ControlworksLogsDbConnectionString}");
         }
     }
 }

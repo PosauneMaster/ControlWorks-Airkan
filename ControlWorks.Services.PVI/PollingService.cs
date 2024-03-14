@@ -1,13 +1,12 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-using BR.AN.PviServices;
+﻿using BR.AN.PviServices;
 
 using ControlWorks.Common;
-using ControlWorks.Services.PVI.Impl;
 using ControlWorks.Services.PVI.Panel;
-using log4net;
+
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Exception = System.Exception;
 
@@ -19,7 +18,6 @@ namespace ControlWorks.Services.PVI
         ICpuManager _cpuManager;
         private CancellationTokenSource _cts;
         private System.Threading.Tasks.Task _pollingTask;
-        private readonly ILog _log = LogManager.GetLogger("ControlWorksLogger");
 
         public PollingService(Service service, ICpuManager cpuManager)
         {
@@ -59,7 +57,7 @@ namespace ControlWorks.Services.PVI
                 }
                 catch (Exception ex)
                 {
-                    _log.Error($"PollingService.Poll", ex);
+                    Trace.TraceError($"PollingService.Poll", ex);
                 }
 
                 interval = TimeSpan.FromMilliseconds(ConfigurationProvider.PollingMilliseconds);

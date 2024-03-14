@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using log4net;
 
 namespace ControlWorks.Common
 {
@@ -23,7 +22,6 @@ namespace ControlWorks.Common
         }
         public static string BaseDirectory => ConfigurationManager.AppSettings["BaseDirectory"];
         public static string SettingsDirectory { get; internal set; }
-        public static ILog Logger { get; internal set; }
         public static string LogFilename { get; internal set; }
         public static string ServiceDescription => "ControlWorks wrapper service for REST API";
         public static string ServiceDisplayName => "ControlWorksRESTApi";

@@ -2,22 +2,19 @@
 
 using ControlWorks.Common;
 using ControlWorks.Services.PVI.Impl;
+using ControlWorks.Services.PVI.Models;
 using ControlWorks.Services.PVI.Panel;
 using ControlWorks.Services.PVI.Task;
 using ControlWorks.Services.PVI.Variables;
-
-using log4net;
+using ControlWorks.Services.PVI.Variables.Models;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
-using ControlWorks.Services.PVI.Models;
-using VariableDetails = ControlWorks.Services.PVI.Variables.VariableDetails;
-using ControlWorks.Services.PVI.Variables.Models;
-using System.Diagnostics;
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+using VariableDetails = ControlWorks.Services.PVI.Variables.VariableDetails;
 
 namespace ControlWorks.Services.PVI.Pvi
 {
@@ -61,7 +58,6 @@ namespace ControlWorks.Services.PVI.Pvi
     }
     public class PviAplication : IPviApplication
     {
-        private readonly ILog _log = LogManager.GetLogger("ControlWorksLogger");
 
         private PviContext _pviContext;
         private ICpuManager _cpuManager;
@@ -75,7 +71,7 @@ namespace ControlWorks.Services.PVI.Pvi
 
         public PviAplication()
         {
-            _log.Info("Initializing PviAplication");
+            Trace.TraceInformation("Initializing PviAplication");
             _eventNotifier = new EventNotifier();
             _serviceWrapper = new ServiceWrapper(_eventNotifier);
 
@@ -154,12 +150,12 @@ namespace ControlWorks.Services.PVI.Pvi
             Trace.TraceInformation($"Adding cpu {info.IpAddress}");
             if (_cpuManager == null)
             {
-                _log.Error("PviApplication. AddCpu:155 __cpuManager is null");
+                Trace.TraceError("PviApplication. AddCpu:155 __cpuManager is null");
             }
             else
             {
                 
-                _log.Info("__cpuManager is not null, adding");
+                Trace.TraceInformation("__cpuManager is not null, adding");
             }
 
             _cpuManager.Add(info);
@@ -325,11 +321,11 @@ namespace ControlWorks.Services.PVI.Pvi
 
             _variableManager = e.VariableManager;
 
-            _log.Info(e.Message);
+            Trace.TraceInformation(e.Message);
 
             if (_cpuManager == null)
             {
-                _log.Error($"_eventNotifier_PviServiceConnected CpuManager is null");
+                Trace.TraceError($"_eventNotifier_PviServiceConnected CpuManager is null");
             }
             else
             {
@@ -359,13 +355,13 @@ namespace ControlWorks.Services.PVI.Pvi
 
             if (ConfigurationProvider.VerboseVariableLogging)
             {
-                _log.Info(e.Message);
+                Trace.TraceInformation(e.Message);
             }
         }
 
         private void _eventNotifier_VariableError(object sender, PviApplicationEventArgs e)
         {
-            _log.Info(e.Message);
+            Trace.TraceInformation(e.Message);
 
         }
 
@@ -383,13 +379,13 @@ namespace ControlWorks.Services.PVI.Pvi
                 }
             }
 
-            _log.Info(e.Message);
+            Trace.TraceInformation(e.Message);
 
         }
 
         private void _eventNotifier_CpuError(object sender, PviApplicationEventArgs e)
         {
-            _log.Info(e.Message);
+            Trace.TraceInformation(e.Message);
         }
 
         private void _eventNotifier_CpuDisconnected(object sender, PviApplicationEventArgs e)
@@ -400,7 +396,7 @@ namespace ControlWorks.Services.PVI.Pvi
         {
             if (e.Cpu != null && e.Cpu.IsConnected && !e.Cpu.HasError)
             {
-                _log.Info(e.Message);
+                Trace.TraceInformation(e.Message);
                 System.Threading.Tasks.Task.Run(() => _taskLoader.LoadTasks(e.Cpu));
             }
         }

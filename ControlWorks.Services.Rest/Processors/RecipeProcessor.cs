@@ -20,8 +20,6 @@ namespace ControlWorks.Services.Rest.Processors
     public interface IRecipeProcessor
     {
         Task<RecipeActionResult> AddRecipe(Recipe recipe);
-        Task<BinCollection> GetActiveRecipes();
-        Task<BinCollection> GetCompleteRecipes();
         Task<RecipeActionResult> Delete(string reference);
         Task<RecipeActionResult> DeleteAll();
         void IncrementItem(string recipeReference, string itemId);
@@ -34,25 +32,12 @@ namespace ControlWorks.Services.Rest.Processors
         private readonly AutoResetEvent _waitHandle;
         private readonly IMapper _mapper;
         private readonly IRecipeService _recipeService;
-        private readonly IBinService _binService;
 
-        private readonly BinMapper _binMapper;
 
         private IPviApplication _pviApplication;
 
         public RecipeProcessor() { }
 
-        public RecipeProcessor(IMapper mapper, IRecipeService recipeService, IBinService binService, IPviApplication pviApplication)
-        {
-            _mapper = mapper;
-            _recipeService = recipeService;
-            _binService = binService;
-            _waitHandle = new AutoResetEvent(false);
-            _pviApplication = pviApplication;
-
-            _binMapper = new BinMapper();
-
-        }
 
         public async Task<RecipeActionResult> AddRecipe(Recipe recipe)
         {
@@ -134,47 +119,6 @@ namespace ControlWorks.Services.Rest.Processors
             bool Selector(VerizonOrderInfo order) => order.Items.All(i => i.ActualQty == i.RequiredQuanity);
             return ResolveOrders(verizonOrderInfoList, Selector);
         }
-
-
-        public async Task<BinCollection> GetActiveRecipes()
-        {
-            try
-            {
-                var orderInfoList = await Task.Run(() => _pviApplication.GetAllRecipies());
-
-                //var orderInfoList = await Task.Run(GetVerizonOrderInfoTestData);
-                var activeOrders = ResolveActiveOrders(orderInfoList);
-
-                var bins = _binMapper.Map(activeOrders);
-                return bins;
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError($"RecipeProcessor.GetActiveRecipes. {ex.Message}\r\n", ex);
-                throw;
-            }
-        }
-
-        public async Task<BinCollection> GetCompleteRecipes()
-        {
-            try
-            {
-                var orderInfoList = await Task.Run(() => _pviApplication.GetAllRecipies());
-
-                //var orderInfoList = await Task.Run(GetVerizonOrderInfoTestData);
-                var completeOrders = ResolveCompleteOrders(orderInfoList);
-
-                var bins = _binMapper.Map(completeOrders);
-                return bins;
-
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError($"RecipeProcessor.GetCompleteRecipes. {ex.Message}\r\n", ex);
-                throw;
-            }
-        }
-
 
         public void IncrementItem(string recipeReference, string itemId)
         {

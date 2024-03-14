@@ -9,12 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Services", "Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Common", "ControlWorks.Common\ControlWorks.Common.csproj", "{9720EB0F-048C-4444-ACE4-110CDCC89CC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Services.PVI", "..\ControlWorks.Services.PVI\ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj", "{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{0810C9A4-AF96-4881-AFCB-982391F99B18}"
 	ProjectSection(SolutionItems) = preProject
 		bin\BR.AN.PviServices.dll = bin\BR.AN.PviServices.dll
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Services.PVI", "ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj", "{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
