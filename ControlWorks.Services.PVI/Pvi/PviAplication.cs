@@ -52,6 +52,8 @@ namespace ControlWorks.Services.PVI.Pvi
         List<UnmatchedItem> GetUnmatchedItems();
         List<AlarmInfo> GetAlarms();
         StatusInfo GetStatusInfo();
+        List<VariableConfiguration> GetVariableConfiguration(string cpuName);
+
 
 
 
@@ -486,6 +488,12 @@ namespace ControlWorks.Services.PVI.Pvi
         public List<VariableMapping>FindVariable(string name)
         {
             return _cpuDataService.FindVariable(name);
+        }
+
+        public List<VariableConfiguration> GetVariableConfiguration(string cpuName)
+        {
+            return null;
+            //return _variableManager.GetVariableConfiguration(cpuName);
         }
     }
 }

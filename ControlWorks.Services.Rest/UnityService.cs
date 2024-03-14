@@ -12,10 +12,10 @@ namespace ControlWorks.Services.Rest
             var container = new UnityContainer();
             var mapper = AutoMapConfiguration.CreateMapper();
             container.RegisterInstance(mapper);
-            container.RegisterType<IRecipeProcessor, RecipeProcessor>();
+            //container.RegisterType<IRecipeProcessor, RecipeProcessor>();
             container.RegisterType<IRecipeService, RecipeService>();
-            container.RegisterType<IItemProcessor, ItemProcessor>();
-            container.RegisterType<IDiagnosticsProcessor, DiagnosticsProcessor>();
+            //container.RegisterType<IItemProcessor, ItemProcessor>();
+            //container.RegisterType<IDiagnosticsProcessor, DiagnosticsProcessor>();
             container.RegisterInstance(WebApiApplication.PviApp);
             
 

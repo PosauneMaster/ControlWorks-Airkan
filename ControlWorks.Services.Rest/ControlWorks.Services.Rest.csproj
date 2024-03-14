@@ -49,6 +49,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoMapConfiguration.cs" />
+    <Compile Include="Controllers\ControlWorks\CpuController.cs" />
+    <Compile Include="Controllers\ControlWorks\DiagnosticController.cs" />
+    <Compile Include="Controllers\ControlWorks\PviController.cs" />
+    <Compile Include="Controllers\ControlWorks\TaskController.cs" />
+    <Compile Include="Controllers\ControlWorks\VariableController.cs" />
     <Compile Include="Data\BinCollection.cs" />
     <Compile Include="Models\Alarm.cs" />
     <Compile Include="Models\BinComplete.cs" />
@@ -65,12 +70,15 @@
     <Compile Include="Models\UnmatchedRecipeItemDto.cs" />
     <Compile Include="Models\VariableDetailIp.cs" />
     <Compile Include="Models\VariableDetailName.cs" />
+    <Compile Include="Processors\AlarmProcessor.cs" />
     <Compile Include="Processors\BaseProcessor.cs" />
     <Compile Include="EventNotifier.cs" />
     <Compile Include="Message.cs" />
-    <Compile Include="Processors\DiagnosticsProcessor.cs" />
+    <Compile Include="Processors\CommandProcessor.cs" />
     <Compile Include="Processors\ItemProcessor.cs" />
     <Compile Include="Processors\RecipeProcessor.cs" />
+    <Compile Include="Processors\RequestProcessor.cs" />
+    <Compile Include="Processors\VariableProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Processors\ServiceProcessor.cs" />
     <Compile Include="RecipeService.cs" />
@@ -143,7 +151,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Start\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Mocks\" />
   </ItemGroup>
   <ItemGroup>
