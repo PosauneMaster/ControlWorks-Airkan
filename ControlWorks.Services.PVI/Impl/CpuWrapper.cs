@@ -27,8 +27,6 @@ namespace ControlWorks.Services.PVI.Impl
         private int _initialCount;
         private Dictionary<string, CpuInfo> _cpuInfoLookup;
 
-        private AutoResetEvent _disconnectWaitHandle;
-
         public CpuWrapper(Service service, IEventNotifier eventNotifier)
         {
             _service = service;

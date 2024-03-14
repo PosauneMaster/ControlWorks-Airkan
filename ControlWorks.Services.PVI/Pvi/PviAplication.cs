@@ -143,8 +143,14 @@ namespace ControlWorks.Services.PVI.Pvi
 
         public void Disconnect()
         {
-            _serviceWrapper.DisconnectPviService();
-            _pviContext.Dispose();
+            if (_serviceWrapper != null)
+            {
+                _serviceWrapper.DisconnectPviService();
+            }
+            if (_pviContext != null)
+            {
+                _pviContext.Dispose();
+            }
         }
 
         public void AddCpu(CpuInfo info)

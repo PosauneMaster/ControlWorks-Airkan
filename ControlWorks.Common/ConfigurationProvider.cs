@@ -99,5 +99,22 @@ namespace ControlWorks.Common
         }
 
         public static string MocksDbConnectionString => System.Configuration.ConfigurationManager.ConnectionStrings["MocksDB"].ConnectionString;
+
+        private static string _logFilePath;
+        public static string LogFilePath
+        {
+            get
+            {
+                if (_logFilePath == null)
+                {
+                    return ConfigurationManager.AppSettings["LogFilePath"];
+                }
+                return _logFilePath;
+            }
+            set
+            {
+                _logFilePath = value;
+            }
+        }
     }
 }

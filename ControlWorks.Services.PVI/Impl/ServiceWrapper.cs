@@ -62,7 +62,10 @@ namespace ControlWorks.Services.PVI.Impl
 
         public void DisconnectPviService()
         {
-            _service.Disconnect();
+            if (_service != null)
+            {
+                _service.Disconnect();
+            }
         }
 
 
