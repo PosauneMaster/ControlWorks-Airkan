@@ -22,7 +22,6 @@ namespace ControlWorks.Common
         }
         public static string BaseDirectory => ConfigurationManager.AppSettings["BaseDirectory"];
         public static string SettingsDirectory { get; internal set; }
-        public static string LogFilename { get; internal set; }
         public static string ServiceDescription => "ControlWorks wrapper service for REST API";
         public static string ServiceDisplayName => "ControlWorksRESTApi";
         public static string ServiceName => "ControlWorks.Services.Rest";
@@ -98,23 +97,6 @@ namespace ControlWorks.Common
             }
         }
 
-        public static string MocksDbConnectionString => System.Configuration.ConfigurationManager.ConnectionStrings["MocksDB"].ConnectionString;
-
-        private static string _logFilePath;
-        public static string LogFilePath
-        {
-            get
-            {
-                if (_logFilePath == null)
-                {
-                    return ConfigurationManager.AppSettings["LogFilePath"];
-                }
-                return _logFilePath;
-            }
-            set
-            {
-                _logFilePath = value;
-            }
-        }
+        public static string LogFilePath => ConfigurationManager.AppSettings["LogFilePath"];
     }
 }

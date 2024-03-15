@@ -55,7 +55,9 @@
     <Compile Include="Logging\ControlWorksListener.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Logging\NLog.config" />
+    <None Include="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

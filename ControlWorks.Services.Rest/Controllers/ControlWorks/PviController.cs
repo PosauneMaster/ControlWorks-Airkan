@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace ControlWorks.Services.Rest.Controllers
-{
-    //[ApiExplorerSettings(IgnoreApi = true)]
+{ 
     public class PviController : ApiController
     {
         public async Task<IHttpActionResult> GetDetails()

@@ -24,28 +24,7 @@ namespace ControlWorks.Common
                 Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
             }
 
-            if (String.IsNullOrEmpty(ConfigurationProvider.LogFilePath)) 
-            {
-                ConfigurationProvider.LogFilePath = Path.Combine(ConfigurationProvider.BaseDirectory, "Logs");
-            }
-
-            if (!Directory.Exists(ConfigurationProvider.LogFilePath))
-            {
-                Directory.CreateDirectory(ConfigurationProvider.LogFilePath);
-            }
-
             Trace.Listeners.Add(new ControlWorksListener());
-            Trace.Listeners.Add(new ConsoleTraceListener());
-
-            try
-            {
-                int x = 0; int y = 0;
-                int z = x / y;
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceError("An Error", ex, new ArgumentException("There is an Argument Exception", new Exception("Inner Exception", new Exception("Inner Exception 2"))));
-            }
 
             Trace.TraceInformation(new string('*', 30));
             Trace.TraceInformation("Starting application...");
@@ -67,7 +46,7 @@ namespace ControlWorks.Common
             Trace.TraceInformation($"ShutdownTriggerVariable={ConfigurationProvider.ShutdownTriggerVariable}");
             Trace.TraceInformation($"SourceStationId={ConfigurationProvider.SourceStationId}");
             Trace.TraceInformation($"MessageTimeout={ConfigurationProvider.MessageTimeout}");
-            Trace.TraceInformation($"LogFilename={ConfigurationProvider.LogFilename}");
+            Trace.TraceInformation($"LogFilePath={ConfigurationProvider.LogFilePath}");
             Trace.TraceInformation($"ServiceDescription={ConfigurationProvider.ServiceDescription}");
             Trace.TraceInformation($"ServiceDisplayName={ConfigurationProvider.ServiceDisplayName}");
             Trace.TraceInformation($"ServiceName={ConfigurationProvider.ServiceName}");
