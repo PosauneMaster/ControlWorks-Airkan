@@ -92,19 +92,21 @@ namespace ControlWorks.Services.PVI.Variables
         {
             VariableInfoEvent.WaitOne(1000);
             var list = new List<VariableInfo>();
-            var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
 
             try
             {
-                using (var db = new LiteDatabase(settingsDb))
+                var taskSettings = File.ReadAllText(ConfigurationProvider.VariableTasks);
+                if (String.IsNullOrEmpty(taskSettings))
                 {
-                    var variableInfoCol = db.GetCollection<VariableInfo>(_variableSettingsName);
-
-                    if (variableInfoCol != null)
-                    {
-                        list.AddRange(variableInfoCol.FindAll());
-                    }
+                    return list;
                 }
+
+                var settingsList = JsonConvert.DeserializeObject<List<VariableInfo>>(taskSettings);
+                if (settingsList != null)
+                {
+                    list.AddRange(settingsList);
+                }
+
             }
             catch (Exception e)
             {
@@ -133,22 +135,24 @@ namespace ControlWorks.Services.PVI.Variables
 
             try
             {
-                var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
-                using (var db = new LiteDatabase(settingsDb))
+                var settingsList = GetAll();
+                var taskInfo = new TaskInfo(taskName);
+                taskInfo.Add(variableName);
+                var variableInfo = new VariableInfo();
+                variableInfo.CpuName = cpuName;
+                variableInfo.TaskInfo = taskInfo;
+
+                var exists = settingsList.FirstOrDefault(i =>
+                i.CpuName == cpuName &&
+                i.TaskInfo.TaskName == taskName &&
+                i.TaskInfo.VariableExists(variableName));
+
+                if (exists == null) 
                 {
-                    var variableInfoCol = db.GetCollection<VariableInfo>(_variableSettingsName);
-                    var currentVariable = variableInfoCol
-                        .Find(v => v.CpuName == cpuName && v.TaskInfo.TaskName == taskName).FirstOrDefault();
-
-                    VariableInfo info = currentVariable;
-
-                    if (currentVariable == null)
-                    {
-                        info = new VariableInfo(cpuName, taskName);
-                    }
-
-                    inserted = info.TaskInfo.Add(variableName);
-                    return variableInfoCol.Upsert(info);
+                    settingsList.Add(variableInfo);
+                    var json = JsonConvert.SerializeObject(settingsList, Formatting.Indented);
+                    File.WriteAllText(ConfigurationProvider.VariableTasks, json);
+                    inserted = true;
                 }
 
             }
@@ -171,18 +175,18 @@ namespace ControlWorks.Services.PVI.Variables
 
             try
             {
-                var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
-                using (var db = new LiteDatabase(settingsDb))
-                {
-                    var variableInfoCol = db.GetCollection<VariableInfo>(_variableSettingsName);
-                    var currentVariable = variableInfoCol
-                        .Find(v => v.CpuName == cpuName && v.TaskInfo.TaskName == taskName).FirstOrDefault();
-                    if (currentVariable != null)
-                    {
-                        currentVariable.TaskInfo.Remove(variableName);
-                        variableInfoCol.Update(currentVariable);
-                    }
-                }
+                //var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
+                //using (var db = new LiteDatabase(settingsDb))
+                //{
+                //    var variableInfoCol = db.GetCollection<VariableInfo>(_variableSettingsName);
+                //    var currentVariable = variableInfoCol
+                //        .Find(v => v.CpuName == cpuName && v.TaskInfo.TaskName == taskName).FirstOrDefault();
+                //    if (currentVariable != null)
+                //    {
+                //        currentVariable.TaskInfo.Remove(variableName);
+                //        variableInfoCol.Update(currentVariable);
+                //    }
+                //}
             }
             catch (Exception e)
             {

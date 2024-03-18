@@ -122,16 +122,16 @@ namespace ControlWorks.Services.PVI.Panel
 
             try
             {
-                var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
-                using (var db = new LiteDatabase(settingsDb))
-                {
-                    var cpuInfoCol = db.GetCollection<CpuInfo>(_cpuSettingsName);
-                    var currentCpu = cpuInfoCol.Find(c => c.IpAddress == cpu.IpAddress).FirstOrDefault();
-                    if (currentCpu != null)
-                    {
-                        cpuInfoCol.Delete(currentCpu.Id);
-                    }
-                }
+                //var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
+                //using (var db = new LiteDatabase(settingsDb))
+                //{
+                //    var cpuInfoCol = db.GetCollection<CpuInfo>(_cpuSettingsName);
+                //    var currentCpu = cpuInfoCol.Find(c => c.IpAddress == cpu.IpAddress).FirstOrDefault();
+                //    if (currentCpu != null)
+                //    {
+                //        cpuInfoCol.Delete(currentCpu.Id);
+                //    }
+                //}
             }
             catch (Exception e)
             {

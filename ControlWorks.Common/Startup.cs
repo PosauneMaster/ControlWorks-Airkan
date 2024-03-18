@@ -50,9 +50,6 @@ namespace ControlWorks.Common
             Trace.TraceInformation($"ServiceDescription={ConfigurationProvider.ServiceDescription}");
             Trace.TraceInformation($"ServiceDisplayName={ConfigurationProvider.ServiceDisplayName}");
             Trace.TraceInformation($"ServiceName={ConfigurationProvider.ServiceName}");
-            Trace.TraceInformation($"SmartConveyorDB={ConfigurationProvider.SmartConveyorDbConnectionString}");
-            Trace.TraceInformation($"ControlworksSettingsDB={ConfigurationProvider.ControlworksSettingsDbConnectionString}");
-            Trace.TraceInformation($"ControlworksLogsDB={ConfigurationProvider.ControlworksLogsDbConnectionString}");
         }
     }
 }

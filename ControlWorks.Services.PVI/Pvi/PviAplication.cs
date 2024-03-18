@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 
 using VariableDetails = ControlWorks.Services.PVI.Variables.VariableDetails;
@@ -490,6 +491,33 @@ namespace ControlWorks.Services.PVI.Pvi
 
         public List<VariableMapping>FindVariable(string name)
         {
+            var cpu = FindCpu("Airkan");
+            var variables = cpu.Variables;
+            var dataTransfer = variables["DataTransfer"];
+            var connected = dataTransfer.IsConnected;
+
+            var sb = new StringBuilder();
+            foreach ( Variable member in dataTransfer.Members )
+            {
+                if (member.Members == null)
+                {
+                    sb.AppendLine($"{member.Name}");
+                }
+                else
+                {
+                    foreach (Variable submember in member.Members)
+                    {
+                        sb.AppendLine($"{member.Name}.{submember.Name}");
+                    }
+                }
+
+                sb.AppendLine();
+
+            }
+
+            File.WriteAllText(@"C:\ControlWorks\Airkan\VariableNames.txt", sb.ToString());
+
+
             return _cpuDataService.FindVariable(name);
         }
 

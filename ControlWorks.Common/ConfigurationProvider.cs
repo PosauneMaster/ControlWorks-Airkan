@@ -75,15 +75,6 @@ namespace ControlWorks.Common
             }
         }
 
-        public static string SmartConveyorDbConnectionString =>
-            System.Configuration.ConfigurationManager.ConnectionStrings["SmartConveyorDB"].ConnectionString;
-
-        public static string ControlworksSettingsDbConnectionString =>
-            System.Configuration.ConfigurationManager.ConnectionStrings["ControlworksSettingsDB"].ConnectionString;
-
-        public static string ControlworksLogsDbConnectionString =>
-            System.Configuration.ConfigurationManager.ConnectionStrings["ControlworksLogsDB"].ConnectionString;
-
         public static bool RestApiTestMode
         {
             get
