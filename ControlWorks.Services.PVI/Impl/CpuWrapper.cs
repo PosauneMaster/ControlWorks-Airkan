@@ -36,12 +36,12 @@ namespace ControlWorks.Services.PVI.Impl
 
         public void Initialize(IEnumerable<CpuInfo> cpuList)
         {
-            var list = new List<CpuInfo>(cpuList);
-            _initialCount = list.Count;
-
-            foreach (var cpuInfo in list)
+            if (cpuList != null)
             {
-                if (cpuInfo.Name == "VerizonPanel1")
+                var list = new List<CpuInfo>(cpuList);
+                _initialCount = list.Count;
+
+                foreach (var cpuInfo in list)
                 {
                     CreateCpu(cpuInfo);
                 }

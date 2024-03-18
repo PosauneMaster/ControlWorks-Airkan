@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using ControlWorks.Common;
+﻿using ControlWorks.Common;
 using ControlWorks.Services.Rest;
 
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 
 namespace ControlWorks.Services
@@ -20,7 +16,6 @@ namespace ControlWorks.Services
 
     public class Host : IHost
     {
-
         public void Start()
         {
             try
@@ -30,10 +25,12 @@ namespace ControlWorks.Services
 
                 if (!ConfigurationProvider.RestApiTestMode)
                 {
+                    var pviApp = WebApiApplication.PviApp;
                     var factory = new TaskFactory();
+                    factory.StartNew(() => pviApp.Connect(), TaskCreationOptions.LongRunning);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Trace.TraceError($"Host:Start {ex.Message}", ex);
             }
@@ -46,7 +43,7 @@ namespace ControlWorks.Services
             {
                 WebApiApplication.PviApp.Disconnect();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Trace.TraceError($"Host:Start {ex.Message}", ex);
             }

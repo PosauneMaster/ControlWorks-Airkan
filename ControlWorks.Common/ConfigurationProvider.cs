@@ -96,7 +96,9 @@ namespace ControlWorks.Common
                 return false;
             }
         }
-
         public static string LogFilePath => ConfigurationManager.AppSettings["LogFilePath"];
+        public static string CpuSettings => ConfigurationManager.AppSettings["CpuSettings"];
+        public static string VariableSettings => ConfigurationManager.AppSettings["VariableSettings"];
+        public static string VariableTasks => ConfigurationManager.AppSettings["VariableTasks"];
     }
 }

@@ -54,9 +54,6 @@ namespace ControlWorks.Services.PVI.Pvi
         StatusInfo GetStatusInfo();
         List<VariableConfiguration> GetVariableConfiguration(string cpuName);
 
-
-
-
     }
     public class PviAplication : IPviApplication
     {

@@ -40,10 +40,14 @@ namespace ControlWorks.Services.PVI.Panel
         {
             var list = new CpuInfoCollection().GetAll();
 
-            foreach (var info in list)
+            if (list != null)
             {
-                _cpuWrapper.Reconnect(info);
+                foreach (var info in list)
+                {
+                    _cpuWrapper.Reconnect(info);
+                }
             }
+
         }
 
         public void DisconnectCpuByName(string name)

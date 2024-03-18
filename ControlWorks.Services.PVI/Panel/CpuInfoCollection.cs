@@ -2,12 +2,16 @@
 
 using LiteDB;
 
+using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading;
-
+using System.Linq;
 namespace ControlWorks.Services.PVI.Panel
 {
     public interface ICpuInfoCollection
@@ -48,17 +52,20 @@ namespace ControlWorks.Services.PVI.Panel
 
             try
             {
-                var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
-                using (var db = new LiteDatabase(settingsDb))
+                var cpuInfo = GetAll();
+                if (cpuInfo == null)
                 {
-                    var cpuInfoCol = db.GetCollection<CpuInfo>(_cpuSettingsName);
-                    var currentCpu = cpuInfoCol.Find(c => c.IpAddress == cpu.IpAddress).FirstOrDefault();
-                    if (currentCpu == null)
-                    {
-                        cpuInfoCol.Insert(cpu);
-                        inserted = true;
-                    }
+                    cpuInfo = new List<CpuInfo>();
                 }
+                var cpuExists = cpuInfo.FirstOrDefault(c => c.IpAddress == cpu.IpAddress);
+                if (cpuExists == null)
+                {
+                    cpuInfo.Add(cpu);
+                    inserted = true;
+                }
+
+                var cpuSettings = JsonConvert.SerializeObject(cpuInfo, Formatting.Indented);
+                File.WriteAllText(ConfigurationProvider.CpuSettings, cpuSettings);
             }
             catch (Exception e)
             {
@@ -76,19 +83,18 @@ namespace ControlWorks.Services.PVI.Panel
         public List<CpuInfo> GetAll()
         {
             CpuInfoEvent.WaitOne(1000);
-            var list = new List<CpuInfo>();
-            var settingsDb = ConfigurationProvider.ControlworksSettingsDbConnectionString;
+            List<CpuInfo> cpuList = new List<CpuInfo>();
 
             try
             {
-                using (var db = new LiteDatabase(settingsDb))
+                if (File.Exists(ConfigurationProvider.CpuSettings))
                 {
-                    var cpuInfoCol = db.GetCollection<CpuInfo>(_cpuSettingsName);
-
-                    if (cpuInfoCol != null)
-                    {
-                        list.AddRange(cpuInfoCol.FindAll());
-                    }
+                    var json = File.ReadAllText(ConfigurationProvider.CpuSettings);
+                    cpuList = JsonConvert.DeserializeObject<List<CpuInfo>>(json);
+                }
+                else
+                {
+                    Trace.TraceInformation("CpuInfoCollection.GetAll. CpuSetting file not initialized");
                 }
             }
             catch (Exception e)
@@ -99,7 +105,7 @@ namespace ControlWorks.Services.PVI.Panel
             {
                 CpuInfoEvent.Set();
             }
-            return list;
+            return cpuList;
         }
 
         public void AddRange(IEnumerable<CpuInfo> cpuList)

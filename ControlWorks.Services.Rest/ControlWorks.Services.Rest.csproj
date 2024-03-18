@@ -74,7 +74,6 @@
     <Compile Include="Processors\CommandProcessor.cs" />
     <Compile Include="Processors\ItemProcessor.cs" />
     <Compile Include="Processors\LogProcessor.cs" />
-    <Compile Include="Processors\RecipeProcessor.cs" />
     <Compile Include="Processors\RequestProcessor.cs" />
     <Compile Include="Processors\VariableProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

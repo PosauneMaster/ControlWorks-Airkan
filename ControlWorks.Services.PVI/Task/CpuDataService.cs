@@ -142,6 +142,10 @@ namespace ControlWorks.Services.PVI.Task
 
             var taskNames = GetTaskNames(cpuName);
             var dtCpu = GetDataTable(cpuName, VariableScope.Global);
+            if(dtCpu == null)
+            {
+                return null;
+            }
 
             cpuDetails.Name = cpuName;
             cpuDetails.IpAddress = ipAddress;
