@@ -79,6 +79,7 @@
     <Compile Include="Task\CpuDetails.cs" />
     <Compile Include="Task\TaskLoader.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="Variables\AirkanVariableService.cs" />
     <Compile Include="Variables\VariableConfiguration.cs" />
     <Compile Include="Variables\VariableData.cs" />
     <Compile Include="Variables\VariableDetails.cs" />
