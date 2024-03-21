@@ -9,9 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading;
-using System.Linq;
 namespace ControlWorks.Services.PVI.Panel
 {
     public interface ICpuInfoCollection

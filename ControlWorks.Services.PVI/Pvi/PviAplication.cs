@@ -6,7 +6,6 @@ using ControlWorks.Services.PVI.Models;
 using ControlWorks.Services.PVI.Panel;
 using ControlWorks.Services.PVI.Task;
 using ControlWorks.Services.PVI.Variables;
-using ControlWorks.Services.PVI.Variables.Models;
 
 using System;
 using System.Collections.Generic;
@@ -48,11 +47,12 @@ namespace ControlWorks.Services.PVI.Pvi
         CpuDetails GetTaskDetailsByIp(string ip, string taskName);
         IEventNotifier GetEventNotifier();
         CommandStatus SendCommand(string cpuName, string commandName, string commandData);
+
         List<VariableMapping> FindVariable(string name);
-        List<VerizonOrderInfo> GetAllRecipies();
-        List<UnmatchedItem> GetUnmatchedItems();
-        List<AlarmInfo> GetAlarms();
-        StatusInfo GetStatusInfo();
+        //List<VerizonOrderInfo> GetAllRecipies();
+        //List<UnmatchedItem> GetUnmatchedItems();
+        //List<AlarmInfo> GetAlarms();
+        //StatusInfo GetStatusInfo();
         List<VariableConfiguration> GetVariableConfiguration(string cpuName);
 
     }
@@ -64,7 +64,8 @@ namespace ControlWorks.Services.PVI.Pvi
         private IVariableManager _variableManager;
         private readonly TaskLoader _taskLoader;
         private readonly CpuDataService _cpuDataService;
-        private readonly VerizonVariableService _verizonVariableService;
+        private readonly AirkanVariableService _airkanVariableService;
+
 
         private readonly IEventNotifier _eventNotifier;
         private readonly IServiceWrapper _serviceWrapper;
@@ -78,7 +79,7 @@ namespace ControlWorks.Services.PVI.Pvi
             _cpuDataService = new CpuDataService();
             _taskLoader = new TaskLoader(_cpuDataService, _eventNotifier);
 
-            _verizonVariableService = new VerizonVariableService();
+            _airkanVariableService = new AirkanVariableService();
 
         }
 
@@ -354,10 +355,10 @@ namespace ControlWorks.Services.PVI.Pvi
                 cpu = task.Parent as Cpu;
             }
 
-            if (variable.Name == "apiResponse" || variable.Name == "apiCmd")
-            {
-                _verizonVariableService.ProcessCommand(cpu, variable.Name, e.Message);
-            }
+            //if (variable.Name == "apiResponse" || variable.Name == "apiCmd")
+            //{
+            //    _verizonVariableService.ProcessCommand(cpu, variable.Name, e.Message);
+            //}
 
             if (ConfigurationProvider.VerboseVariableLogging)
             {
@@ -439,54 +440,10 @@ namespace ControlWorks.Services.PVI.Pvi
 
             if (cpu != null)
             {
-                return _verizonVariableService.ProcessCommand(cpu, commandName, commandData);
+                return _airkanVariableService.ProcessCommand(cpu, commandName, commandData);
             }
 
             return new CommandStatus(1, $"Unable to locate Cpu {cpuName}");
-        }
-
-        public List<VerizonOrderInfo> GetAllRecipies()
-        {
-            var cpu = FindCpu(String.Empty);
-            if (cpu != null)
-            {
-               return _verizonVariableService.GetAllOrders(cpu);
-            }
-
-            return null;
-        }
-
-        public List<UnmatchedItem> GetUnmatchedItems()
-        {
-            var cpu = FindCpu(String.Empty);
-            if (cpu != null)
-            {
-                return _verizonVariableService.GetUnmatchedItems(cpu);
-            }
-
-            return null;
-        }
-
-        public List<AlarmInfo> GetAlarms()
-        {
-            var cpu = FindCpu(String.Empty);
-            if (cpu != null)
-            {
-                return _verizonVariableService.GetAlarms(cpu);
-            }
-
-            return null;
-        }
-
-        public StatusInfo GetStatusInfo()
-        {
-            var cpu = FindCpu(String.Empty);
-            if (cpu != null)
-            {
-                return _verizonVariableService.GetStatusInfo(cpu);
-            }
-
-            return null;
         }
 
         public List<VariableMapping>FindVariable(string name)

@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoMapConfiguration.cs" />
+    <Compile Include="Controllers\ControlWorks\AirkanController.cs" />
     <Compile Include="Controllers\ControlWorks\CpuController.cs" />
     <Compile Include="Controllers\ControlWorks\DiagnosticController.cs" />
     <Compile Include="Controllers\ControlWorks\LogController.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Models\SystemStatus.cs" />
     <Compile Include="Models\VariableDetailIp.cs" />
     <Compile Include="Models\VariableDetailName.cs" />
+    <Compile Include="Processors\AirkanProcessor.cs" />
     <Compile Include="Processors\AlarmProcessor.cs" />
     <Compile Include="Processors\BaseProcessor.cs" />
     <Compile Include="EventNotifier.cs" />

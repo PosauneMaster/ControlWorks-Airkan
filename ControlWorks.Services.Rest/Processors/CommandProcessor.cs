@@ -2,12 +2,6 @@
 
 using Newtonsoft.Json;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace ControlWorks.Services.Rest.Processors
 {
     public class CommandProcessor
@@ -15,6 +9,11 @@ namespace ControlWorks.Services.Rest.Processors
         private IPviApplication _pviApplication;
         private IVariableProcessor _variableProcessor;
         private PVI.IEventNotifier _eventNotifier;
+
+        public CommandProcessor(IPviApplication pviApplication)
+        {
+            _pviApplication = pviApplication;
+        }
 
         public CommandProcessor(IPviApplication pviApplication, IVariableProcessor variableProcessor)
         {
