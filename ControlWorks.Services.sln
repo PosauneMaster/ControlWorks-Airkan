@@ -16,6 +16,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{0810C9A4-AF9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Services.PVI", "ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj", "{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ControlWorks.Services.Setup", "ControlWorks.Services.Setup\ControlWorks.Services.Setup.vdproj", "{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Airkan.Tests", "ControlWorks.Airkan.Tests\ControlWorks.Airkan.Tests.csproj", "{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +60,22 @@ Global
 		{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}.Release|x86.ActiveCfg = Release|Any CPU
 		{7D3392AA-92E4-4E0E-AC9C-7BC478C4BF5E}.Release|x86.Build.0 = Release|Any CPU
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Debug|Any CPU.ActiveCfg = Debug
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Debug|Any CPU.Build.0 = Debug
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Debug|x86.ActiveCfg = Debug
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Debug|x86.Build.0 = Debug
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Release|Any CPU.ActiveCfg = Release
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Release|Any CPU.Build.0 = Release
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Release|x86.ActiveCfg = Release
+		{8E463B01-24FA-4DEE-ABF7-EBF61ABC69BE}.Release|x86.Build.0 = Release
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Debug|x86.Build.0 = Debug|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|x86.ActiveCfg = Release|Any CPU
+		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

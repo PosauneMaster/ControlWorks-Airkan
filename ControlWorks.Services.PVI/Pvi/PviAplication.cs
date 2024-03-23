@@ -47,13 +47,10 @@ namespace ControlWorks.Services.PVI.Pvi
         CpuDetails GetTaskDetailsByIp(string ip, string taskName);
         IEventNotifier GetEventNotifier();
         CommandStatus SendCommand(string cpuName, string commandName, string commandData);
-
         List<VariableMapping> FindVariable(string name);
-        //List<VerizonOrderInfo> GetAllRecipies();
-        //List<UnmatchedItem> GetUnmatchedItems();
-        //List<AlarmInfo> GetAlarms();
-        //StatusInfo GetStatusInfo();
         List<VariableConfiguration> GetVariableConfiguration(string cpuName);
+        List<AirkanVariable> GetAirkanVariables(string cpuName);
+
 
     }
     public class PviAplication : IPviApplication
@@ -79,7 +76,7 @@ namespace ControlWorks.Services.PVI.Pvi
             _cpuDataService = new CpuDataService();
             _taskLoader = new TaskLoader(_cpuDataService, _eventNotifier);
 
-            _airkanVariableService = new AirkanVariableService();
+            _airkanVariableService = new AirkanVariableService(_eventNotifier);
 
         }
 
@@ -444,6 +441,19 @@ namespace ControlWorks.Services.PVI.Pvi
             }
 
             return new CommandStatus(1, $"Unable to locate Cpu {cpuName}");
+        }
+
+        public List<AirkanVariable> GetAirkanVariables(string cpuName)
+        {
+            var cpu = FindCpu(cpuName);
+
+            if (cpu != null)
+            {
+                return _airkanVariableService.GetAirkanVariables(cpu);
+            }
+
+            Trace.TraceError($"PVIApplication.GetAirkanVariables. Unable to locate Cpu {cpuName}");
+            return null;
         }
 
         public List<VariableMapping>FindVariable(string name)

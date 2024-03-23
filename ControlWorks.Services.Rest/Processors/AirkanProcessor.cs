@@ -1,11 +1,9 @@
 ﻿using ControlWorks.Services.PVI.Pvi;
+using ControlWorks.Services.PVI.Variables;
 
 using Newtonsoft.Json;
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ControlWorks.Services.Rest.Processors
@@ -34,5 +32,10 @@ namespace ControlWorks.Services.Rest.Processors
             await Task.Run(() => _pviApplication.SendCommand(cpuName, command, jsonData));
         }
 
+        public async Task<List<AirkanVariable>> GetAirkanVariablesAsync()
+        {
+            return await Task.Run(() => _pviApplication.GetAirkanVariables(cpuName));
+
+        }
     }
 }

@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BarTenderFileService.cs" />
     <Compile Include="DataResponse.cs" />
     <Compile Include="HeartBeatService.cs" />
     <Compile Include="Impl\FileWrapper.cs" />

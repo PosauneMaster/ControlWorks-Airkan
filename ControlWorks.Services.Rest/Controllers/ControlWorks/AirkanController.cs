@@ -53,6 +53,27 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
             }
         }
 
+        [HttpGet]
+        [Route("api/Airkan/SetVariableList")]
+        public async Task<IHttpActionResult> GetVariableList()
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
+
+                var variables = await airkanProcessor.GetAirkanVariablesAsync();
+
+                return Ok(variables);
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "SetVariable");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
+
+
 
     }
 }
