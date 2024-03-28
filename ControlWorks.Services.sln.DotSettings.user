@@ -1,13 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=004e6c23_002D6f69_002D43ac_002D9c35_002D179c5cf5fe0f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetActiveRecipes_Test" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeProcessor_Tests.GetActiveRecipes_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeProcessor_Tests.AddRecipe_Duplicate_Fails_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeProcessor_Tests.AddRecipe_Success_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeProcessor_Tests.GetUnmatchedItems&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeProcessor_Tests.AddRecipe_Null_Fails_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.RecipeService_Tests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.BinService_Tests.Create_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::F0703D80-0111-47BA-AE65-99E154D7945F::.NETFramework,Version=v4.7.2::ControlWorks.Services.Test.UnitTests.BinService_Tests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.BarTenderFileServiceTests.FileTemplateTest&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+&lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Airkan/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

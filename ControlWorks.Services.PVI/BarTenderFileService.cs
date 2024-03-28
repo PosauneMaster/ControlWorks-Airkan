@@ -15,7 +15,8 @@ namespace ControlWorks.Services.PVI
 //VO/23/012662; Société ERHYG; IO/H23/01384;2301266252093; E20;E20L; 100;200;8; BUIS;1600;0,75
         public BarTenderFileService() { }
 
-        private string FileTemplate(
+        public string FileDetails(
+            string btwFileName,
             string ordernummer,
             string werf,
             string klantreferentie,
@@ -29,9 +30,8 @@ namespace ControlWorks.Services.PVI
             string lengte,
             string dikte)
         {
-            var fileName = "";
             var sb = new StringBuilder();
-            sb.AppendLine($@"%BTW% /AF=""\\srvsql1\d$\ccs\navision\bartender {fileName}"" /PRN=""KIOSK"" /D=""<Trigger File Name>"" /DbTextHeader=3 /R=3 /P");
+            sb.AppendLine($@"%BTW% /AF=""\\srvsql1\d$\ccs\navision\bartender {btwFileName}"" /PRN=""KIOSK"" /D=""<Trigger File Name>"" /DbTextHeader=3 /R=3 /P");
             sb.AppendLine("%END%");
             sb.AppendLine("ordernummer;werf;klantreferentie;barcode; kaderl;kader2;maat1;maat2;stuknr;type;lengte;dikte");
             sb.AppendLine($"{ordernummer};{werf};{klantreferentie};{barcode};{kaderl};{kader2};{maat1};{maat2};{stuknr};{type};{lengte};{dikte}");

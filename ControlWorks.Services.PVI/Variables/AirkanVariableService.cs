@@ -5,9 +5,12 @@ using ControlWorks.Services.PVI.Models;
 using Newtonsoft.Json;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
+using ControlWorks.Common;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -18,9 +21,31 @@ namespace ControlWorks.Services.PVI.Variables
         private static object _syncLock = new object();
         private readonly IEventNotifier _eventNotifier;
         private List<string> _variableNames;
+        private FileSystemWatcher _watcher;
+        private static volatile bool _fileWatcherEventFired = false;
 
         public AirkanVariableService(IEventNotifier eventNotifier)
         {
+            //FileSystemWatcher watcher = new FileSystemWatcher();
+            //watcher.Path = path;
+            //watcher.NotifyFilter = NotifyFilters.LastWrite;
+            //watcher.Filter = "*.*";
+            //watcher.Changed += new FileSystemEventHandler(OnChanged);
+            //watcher.EnableRaisingEvents = true;
+
+
+            _watcher = new FileSystemWatcher(ConfigurationProvider.AirkanNetworkFolder);
+            _watcher.NotifyFilter = NotifyFilters.LastWrite;
+
+            _watcher.Changed += (sender, args) => { OnNetworkFilesChanged(sender); };
+            //_watcher.Created += (sender, args) => { OnNetworkFilesChanged(sender); };
+            //_watcher.Deleted += (sender, args) => { OnNetworkFilesChanged(sender); };
+            //_watcher.Renamed += (sender, args) => { OnNetworkFilesChanged(sender); };
+            //_watcher.Error += (sender, args) => { OnNetworkFilesChanged(sender); };
+
+            _watcher.Filter = "*.*";
+            _watcher.IncludeSubdirectories = true;
+            _watcher.EnableRaisingEvents = true;
             _eventNotifier = eventNotifier;
             _eventNotifier.VariableValueChanged += _eventNotifier_VariableValueChanged;
 
@@ -78,6 +103,10 @@ namespace ControlWorks.Services.PVI.Variables
         {
         }
 
+        private void OnNetworkFilesChanged(object sender)
+        {
+        }
+
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
             lock (_syncLock)
@@ -87,7 +116,9 @@ namespace ControlWorks.Services.PVI.Variables
                     case "SetVariable":
                         Send(cpu, commandData);
                         break;
-
+                    case "ProcessFile":
+                        ProcessInputFile(commandData, cpu);
+                        break;
                     default:
                         break;
                 }
@@ -189,6 +220,67 @@ namespace ControlWorks.Services.PVI.Variables
                 }
 
                 dataTransfer.WriteValue();
+            }
+        }
+
+        public void ProcessInputFile(string filePath, Cpu cpu)
+        {
+            if (!File.Exists(filePath))
+            {
+                Trace.TraceError($"File {filePath} not found.");
+                throw new System.Exception($"File {filePath} not found.");
+            }
+
+            var lines = File.ReadAllLines(filePath);
+            Variable dataTransfer = cpu.Variables[dataTransferVariable];
+
+            var sb = new StringBuilder();
+            foreach (DictionaryEntry task in cpu.Tasks)
+            {
+                BR.AN.PviServices.Task t = task.Value as BR.AN.PviServices.Task;
+                sb.AppendLine(t.Name);
+            }
+
+            var names = sb.ToString();
+
+
+            foreach (var line in lines)
+            {
+                var split = line.Split(',');
+                if (split.Length > 0)
+                {
+                    //dataTransfer.Members["Qty"].Value = split[0];
+                    //dataTransfer.Members[0]["Basic.CoilGauge"];
+
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        dataTransfer.Members[i]["DuctJob.Length_1"].Value = split[1];
+                        dataTransfer.Members[i]["DuctJob.Length_2"].Value = split[2];
+                        dataTransfer.Members[i]["DuctJob.Type"].Value = split[3];
+                        dataTransfer.Members[i]["DuctJob.Bead"].Value = split[4];
+                        dataTransfer.Members[i]["DuctJob.Damper"].Value = split[5];
+                        dataTransfer.Members[i]["DuctJob.ConnTypeR"].Value = split[6];
+                        dataTransfer.Members[i]["DuctJob.ConnTypeL"].Value = split[7];
+                        dataTransfer.Members[i]["DuctJob.CleatMode"].Value = split[8];
+                        dataTransfer.Members[i]["DuctJob.CleatType"].Value = split[9];
+                        dataTransfer.Members[i]["DuctJob.LockType"].Value = split[10];
+                        dataTransfer.Members[i]["DuctJob.SealantUsed"].Value = split[1];
+                        dataTransfer.Members[i]["DuctJob.Brake"].Value = split[11];
+                        dataTransfer.Members[i]["DuctJob.Insulation"].Value = split[12];
+                        dataTransfer.Members[i]["DuctJob.PinSpacing"].Value = split[13];
+                        dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value = split[14];
+                        dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value = split[15];
+                        dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value = split[16];
+                        dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value = split[17];
+                        dataTransfer.Members[i]["DuctJob.HoleSize"].Value = split[18];
+                        dataTransfer.Members[i]["Basic.CoilNumber"].Value = split[19];
+                        dataTransfer.Members[i]["Basic.CoilGauge"].Value = split[20];
+                        dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[21];
+                        dataTransfer.Members[i]["Basic.TotalLength"].Value = split[22];
+                    }
+
+
+                }
             }
         }
 

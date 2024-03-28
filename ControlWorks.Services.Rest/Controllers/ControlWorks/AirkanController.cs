@@ -73,6 +73,27 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
             }
         }
 
+        [HttpPost]
+        [Route("api/Airkan/ProcessFile")]
+        public async Task<IHttpActionResult> ProcessFile(string filename)
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
+
+                await airkanProcessor.ProcessFileAsync(filename);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "ProcessFile");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
+
+
 
 
     }
