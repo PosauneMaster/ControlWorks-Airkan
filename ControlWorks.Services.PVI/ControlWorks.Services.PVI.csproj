@@ -42,6 +42,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,10 +54,12 @@
   <ItemGroup>
     <Compile Include="BarTenderFileService.cs" />
     <Compile Include="DataResponse.cs" />
+    <Compile Include="FileWatcher.cs" />
     <Compile Include="HeartBeatService.cs" />
     <Compile Include="Impl\FileWrapper.cs" />
     <Compile Include="Impl\CpuWrapper.cs" />
     <Compile Include="Impl\VariableWrapper.cs" />
+    <Compile Include="Models\AirkanInputFileInfo.cs" />
     <Compile Include="Models\AlarmInfo.cs" />
     <Compile Include="Models\RecipeAddedEventArgs.cs" />
     <Compile Include="Models\CommandStatus.cs" />
@@ -88,8 +91,6 @@
     <Compile Include="Variables\VariableCollection.cs" />
     <Compile Include="Variables\VariableDetailRespose.cs" />
     <Compile Include="Variables\VariableResponse.cs" />
-    <Compile Include="Models\VerizonOrderInfo.cs" />
-    <Compile Include="Variables\VerizonVariableService.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper">

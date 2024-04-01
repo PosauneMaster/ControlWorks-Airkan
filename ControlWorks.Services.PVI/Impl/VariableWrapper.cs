@@ -1,14 +1,13 @@
 ﻿using BR.AN.PviServices;
+
 using ControlWorks.Services.PVI.Variables;
 
 using Newtonsoft.Json;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Text;
 
 namespace ControlWorks.Services.PVI.Impl
 {
@@ -317,7 +316,7 @@ namespace ControlWorks.Services.PVI.Impl
             }
             catch (System.Exception e)
             {
-                Console.WriteLine(e);
+                Trace.TraceError(e.Message, e);
                 throw;
             }
             return value ?? String.Empty;

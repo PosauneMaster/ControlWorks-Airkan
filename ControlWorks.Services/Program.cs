@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Web.Mvc;
 
 using Topshelf;
 
@@ -12,6 +13,9 @@ namespace ControlWorks.Services
     {
         public static void Main(string[] args)
         {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             Startup.Initialize();
 
             Trace.TraceInformation("Starting Service...");

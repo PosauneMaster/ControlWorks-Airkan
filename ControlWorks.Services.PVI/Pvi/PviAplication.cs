@@ -75,8 +75,8 @@ namespace ControlWorks.Services.PVI.Pvi
 
             _cpuDataService = new CpuDataService();
             _taskLoader = new TaskLoader(_cpuDataService, _eventNotifier);
-
             _airkanVariableService = new AirkanVariableService(_eventNotifier);
+
 
         }
 
@@ -352,11 +352,6 @@ namespace ControlWorks.Services.PVI.Pvi
                 cpu = task.Parent as Cpu;
             }
 
-            //if (variable.Name == "apiResponse" || variable.Name == "apiCmd")
-            //{
-            //    _verizonVariableService.ProcessCommand(cpu, variable.Name, e.Message);
-            //}
-
             if (ConfigurationProvider.VerboseVariableLogging)
             {
                 Trace.TraceInformation(e.Message);
@@ -401,6 +396,7 @@ namespace ControlWorks.Services.PVI.Pvi
             if (e.Cpu != null && e.Cpu.IsConnected && !e.Cpu.HasError)
             {
                 Trace.TraceInformation(e.Message);
+
                 System.Threading.Tasks.Task.Run(() => _taskLoader.LoadTasks(e.Cpu));
             }
         }

@@ -18,36 +18,20 @@ namespace ControlWorks.Services.PVI.Variables
     {
         const string dataTransferVariable = "DataTransfer";
 
-        private static object _syncLock = new object();
+        private static readonly object _syncLock = new object();
         private readonly IEventNotifier _eventNotifier;
-        private List<string> _variableNames;
-        private FileSystemWatcher _watcher;
-        private static volatile bool _fileWatcherEventFired = false;
+        private readonly List<string> _variableNames;
+        private readonly FileWatcher _fileWatcher;
+        private Cpu _cpu;
 
         public AirkanVariableService(IEventNotifier eventNotifier)
         {
-            //FileSystemWatcher watcher = new FileSystemWatcher();
-            //watcher.Path = path;
-            //watcher.NotifyFilter = NotifyFilters.LastWrite;
-            //watcher.Filter = "*.*";
-            //watcher.Changed += new FileSystemEventHandler(OnChanged);
-            //watcher.EnableRaisingEvents = true;
+            _fileWatcher = new FileWatcher();
+            _fileWatcher.FilesChanged += _fileWatcher_FilesChanged;
 
-
-            _watcher = new FileSystemWatcher(ConfigurationProvider.AirkanNetworkFolder);
-            _watcher.NotifyFilter = NotifyFilters.LastWrite;
-
-            _watcher.Changed += (sender, args) => { OnNetworkFilesChanged(sender); };
-            //_watcher.Created += (sender, args) => { OnNetworkFilesChanged(sender); };
-            //_watcher.Deleted += (sender, args) => { OnNetworkFilesChanged(sender); };
-            //_watcher.Renamed += (sender, args) => { OnNetworkFilesChanged(sender); };
-            //_watcher.Error += (sender, args) => { OnNetworkFilesChanged(sender); };
-
-            _watcher.Filter = "*.*";
-            _watcher.IncludeSubdirectories = true;
-            _watcher.EnableRaisingEvents = true;
             _eventNotifier = eventNotifier;
             _eventNotifier.VariableValueChanged += _eventNotifier_VariableValueChanged;
+            _eventNotifier.VariableConnected += _eventNotifier_VariableConnected;
 
             _variableNames = new List<String>();
             _variableNames.Add("Basic.CutLength");
@@ -99,13 +83,65 @@ namespace ControlWorks.Services.PVI.Variables
             _variableNames.Add("CustomerInfo.CustomerName");
         }
 
+        private void _eventNotifier_VariableConnected(object sender, PviApplicationEventArgs e)
+        {
+            if (sender is Variable v)
+            {
+                if (v.Name == "FileNames")
+                {
+                    if (v.Parent is BR.AN.PviServices.Task task)
+                    {
+                        _cpu = task.Parent as Cpu;
+                        SetFiles(ConfigurationProvider.AirkanNetworkFolder);
+                    }
+                }
+            }
+        }
+
+        private readonly Dictionary<int, string> _inputFiles = new Dictionary<int, string>();
+        private void _fileWatcher_FilesChanged(object sender, FileWatchEventArgs e)
+        {
+            SetFiles(ConfigurationProvider.AirkanNetworkFolder);
+        }
+
+        public List<AirkanInputFileInfo> GetAirkanInputFileInfos()
+        {
+            var list = new List<AirkanInputFileInfo>();
+
+            return list;
+
+        }
+
+        private void SetFiles(string directory)
+        {
+            //if (Directory.Exists(directory))
+            //{
+            //    try
+            //    {
+            //        var files = Directory.GetFiles(directory);
+            //        for (int i = 0; i < files.Length; i++)
+            //        {
+            //            _inputFiles.Add(i + 1, files[i]);
+            //            _cpu.Tasks["DataTransf"].Variables["FileNames"].Value[i] = files[i];
+            //        }
+
+            //        _cpu.Tasks["DataTransf"].Variables["FileNames"].WriteValue();
+            //    }
+            //    catch (System.Exception e)
+            //    {
+            //        Trace.TraceError($"AirkanVariableService.SetFiles. Error setting files\r\n{e.Message}");
+            //    }
+            //}
+            //else
+            //{
+            //    Trace.TraceError($"AirkanVariableService.SetFiles. Directory {directory} not found");
+            //}
+        }
+
         private void _eventNotifier_VariableValueChanged(object sender, PviApplicationEventArgs e)
         {
         }
 
-        private void OnNetworkFilesChanged(object sender)
-        {
-        }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
@@ -225,6 +261,17 @@ namespace ControlWorks.Services.PVI.Variables
 
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
+            var v1 = _cpu.Variables["DataTransfer"];
+            var v2 = _cpu.Tasks["DataTransf"].Variables["FileNames"];
+            var v3 = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
+            var v4 = _cpu.Tasks["DataTransf"].Variables["FileSendToDisplay"];
+            var v5 = _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"];
+            var v6 = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"];
+            var v7 = _cpu.Tasks["DataTransf"].Variables["FileLocationDataReturn"];
+            var v8 = _cpu.Tasks["DataTransf"].Variables["ProductFinished"];
+
+
+
             if (!File.Exists(filePath))
             {
                 Trace.TraceError($"File {filePath} not found.");
@@ -234,23 +281,12 @@ namespace ControlWorks.Services.PVI.Variables
             var lines = File.ReadAllLines(filePath);
             Variable dataTransfer = cpu.Variables[dataTransferVariable];
 
-            var sb = new StringBuilder();
-            foreach (DictionaryEntry task in cpu.Tasks)
-            {
-                BR.AN.PviServices.Task t = task.Value as BR.AN.PviServices.Task;
-                sb.AppendLine(t.Name);
-            }
-
-            var names = sb.ToString();
-
-
             foreach (var line in lines)
             {
                 var split = line.Split(',');
                 if (split.Length > 0)
                 {
                     //dataTransfer.Members["Qty"].Value = split[0];
-                    //dataTransfer.Members[0]["Basic.CoilGauge"];
 
                     for (int i = 0; i < lines.Length; i++)
                     {
@@ -278,14 +314,11 @@ namespace ControlWorks.Services.PVI.Variables
                         dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[21];
                         dataTransfer.Members[i]["Basic.TotalLength"].Value = split[22];
                     }
-
-
                 }
             }
         }
 
     }
-
     public class AirkanVariable
     {
         public string Name { get; set; }
@@ -307,60 +340,3 @@ namespace ControlWorks.Services.PVI.Variables
 
     }
 }
-
-//Basic.CutLength
-//Basic.CoilGauge
-//Basic.CoilWidthMeasured
-//Basic.CoilWidth
-//Basic.PartScrapLength
-//Basic.JobScrapLength
-//Basic.TotalLength
-
-//DuctJob.Bead
-//DuctJob.Brake
-//DuctJob.CleatMode
-//DuctJob.CleatType
-//DuctJob.Damper
-//DuctJob.HoleSize
-//DuctJob.Insulation
-//DuctJob.Length_1
-//DuctJob.Length_2
-//DuctJob.LockType
-//DuctJob.ConnTypeL
-//DuctJob.ConnTypeR
-//DuctJob.Cutouts
-//DuctJob.PinSpacing
-//DuctJob.SealantUsed
-//DuctJob.Sides
-//DuctJob.TieRodType_Leg_1
-//DuctJob.TieRodType_Leg_2
-//DuctJob.TieRodHoles_Leg_1
-//DuctJob.TieRodHoles_Leg_2
-//DuctJob.Type
-
-//Cutouts.[0]
-//Cutouts.[1]
-//Cutouts.[2]
-//Cutouts.[3]
-//Cutouts.[4]
-//Cutouts.[5]
-//Cutouts.[6]
-//Cutouts.[7]
-
-//JobName
-
-//DownloadNumber
-
-//JobNum
-
-//NeoPrintData.ReferenceERP
-//NeoPrintData.DeliveryYardERP
-//NeoPrintData.CustomerOrderERP
-//NeoPrintData.BarCode
-//NeoPrintData.PieceNumberERP
-
-//CustomerInfo.CustomerOrderNumber
-//CustomerInfo.CustomerAddress
-//CustomerInfo.CustomerName
-
-

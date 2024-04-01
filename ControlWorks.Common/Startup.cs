@@ -1,8 +1,5 @@
 ﻿using ControlWorks.Common.Logging;
 
-using NLog;
-
-using System;
 using System.Diagnostics;
 using System.IO;
 

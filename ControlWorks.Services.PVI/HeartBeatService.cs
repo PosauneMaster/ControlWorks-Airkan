@@ -28,9 +28,9 @@ namespace ControlWorks.Services.PVI
 
             try
             {
-                if (_cpu.Variables.ContainsKey("Heartbeat"))
+                if (_cpu.Tasks.ContainsKey("Heartbeat"))
                 {
-                    Variable hb = _cpu.Variables["Heartbeat"];
+                    Variable hb = _cpu.Tasks["DataTransf"].Variables["Heartbeat"];
                     if (hb != null)
                     {
                         hb.Connected += Hb_Connected;
