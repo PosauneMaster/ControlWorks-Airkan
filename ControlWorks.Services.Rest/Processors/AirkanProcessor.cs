@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
+using ControlWorks.Services.PVI.Models;
 
 namespace ControlWorks.Services.Rest.Processors
 {
@@ -36,6 +37,11 @@ namespace ControlWorks.Services.Rest.Processors
         public async Task<List<AirkanVariable>> GetAirkanVariablesAsync()
         {
             return await Task.Run(() => _pviApplication.GetAirkanVariables(cpuName));
+        }
+
+        public async Task<List<AirkanInputFileInfo>> GetAirkanInputFilesAsync()
+        {
+            return await Task.Run(() => _pviApplication.GetAirkanInputFiles());
         }
 
         public async Task ProcessFileAsync(string filename)

@@ -50,8 +50,7 @@ namespace ControlWorks.Services.PVI.Pvi
         List<VariableMapping> FindVariable(string name);
         List<VariableConfiguration> GetVariableConfiguration(string cpuName);
         List<AirkanVariable> GetAirkanVariables(string cpuName);
-
-
+        List<AirkanInputFileInfo> GetAirkanInputFiles();
     }
     public class PviAplication : IPviApplication
     {
@@ -61,7 +60,7 @@ namespace ControlWorks.Services.PVI.Pvi
         private IVariableManager _variableManager;
         private readonly TaskLoader _taskLoader;
         private readonly CpuDataService _cpuDataService;
-        private readonly AirkanVariableService _airkanVariableService;
+        private AirkanVariableService _airkanVariableService;
 
 
         private readonly IEventNotifier _eventNotifier;
@@ -75,9 +74,6 @@ namespace ControlWorks.Services.PVI.Pvi
 
             _cpuDataService = new CpuDataService();
             _taskLoader = new TaskLoader(_cpuDataService, _eventNotifier);
-            _airkanVariableService = new AirkanVariableService(_eventNotifier);
-
-
         }
 
         #region public interface
@@ -398,6 +394,9 @@ namespace ControlWorks.Services.PVI.Pvi
                 Trace.TraceInformation(e.Message);
 
                 System.Threading.Tasks.Task.Run(() => _taskLoader.LoadTasks(e.Cpu));
+
+                _airkanVariableService = new AirkanVariableService(_eventNotifier, e.Cpu );
+
             }
         }
 
@@ -450,6 +449,11 @@ namespace ControlWorks.Services.PVI.Pvi
 
             Trace.TraceError($"PVIApplication.GetAirkanVariables. Unable to locate Cpu {cpuName}");
             return null;
+        }
+
+        public List<AirkanInputFileInfo> GetAirkanInputFiles()
+        {
+            return _airkanVariableService.GetAirkanInputFiles();
         }
 
         public List<VariableMapping>FindVariable(string name)

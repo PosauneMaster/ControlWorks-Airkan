@@ -59,6 +59,7 @@
     <Compile Include="Impl\FileWrapper.cs" />
     <Compile Include="Impl\CpuWrapper.cs" />
     <Compile Include="Impl\VariableWrapper.cs" />
+    <Compile Include="Models\AirkanConfiguration.cs" />
     <Compile Include="Models\AirkanInputFileInfo.cs" />
     <Compile Include="Models\AlarmInfo.cs" />
     <Compile Include="Models\RecipeAddedEventArgs.cs" />

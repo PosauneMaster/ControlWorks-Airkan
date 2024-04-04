@@ -26,7 +26,15 @@ namespace ControlWorks.Services.PVI
             };
 
             _watcher = new FileSystemWatcher(ConfigurationProvider.AirkanNetworkFolder);
-            _watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
+
+            _watcher.NotifyFilter = NotifyFilters.Attributes
+                                   | NotifyFilters.CreationTime
+                                   | NotifyFilters.DirectoryName
+                                   | NotifyFilters.FileName
+                                   | NotifyFilters.LastAccess
+                                   | NotifyFilters.LastWrite
+                                   | NotifyFilters.Security
+                                   | NotifyFilters.Size;
 
             _watcher.Changed += OnNetworkFilesChanged;
             _watcher.Deleted += OnNetworkFilesChanged;
@@ -49,8 +57,6 @@ namespace ControlWorks.Services.PVI
 
         private void OnNetworkFilesChanged(object sender, FileSystemEventArgs e)
         {
-            Trace.TraceInformation($"{_counter } Network Directory Changed at {DateTime.Now:HH:mm:ss:ffff}");
-            Interlocked.Increment(ref _counter);
             _cacheItemPolicy.AbsoluteExpiration =
                 DateTimeOffset.Now.AddMilliseconds(CacheTimeMilliseconds);
 
@@ -58,7 +64,6 @@ namespace ControlWorks.Services.PVI
 
         }
 
-        private volatile int _counter = 0;
         private void OnRemovedFromCache(CacheEntryRemovedArguments args)
         {
             if (args.RemovedReason != CacheEntryRemovedReason.Expired)
@@ -68,8 +73,7 @@ namespace ControlWorks.Services.PVI
 
             var e = args.CacheItem.Value.ToString();
 
-            Trace.TraceInformation($"{_counter} File Watch Triggered for {e} at {DateTime.Now:HH:mm:ss:ffff}");
-            Interlocked.Increment(ref _counter);
+            Trace.TraceInformation($"File Watch Triggered for {e}");
 
             OnFilesChanged(new FileWatchEventArgs() {Directory = ConfigurationProvider.AirkanNetworkFolder });
         }

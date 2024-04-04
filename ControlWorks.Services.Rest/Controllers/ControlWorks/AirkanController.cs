@@ -54,7 +54,7 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
         }
 
         [HttpGet]
-        [Route("api/Airkan/SetVariableList")]
+        [Route("api/Airkan/GetVariableList")]
         public async Task<IHttpActionResult> GetVariableList()
         {
             try
@@ -67,11 +67,32 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
             }
             catch (Exception ex)
             {
-                ex.Data.Add("AirkanController.Operation", "SetVariable");
+                ex.Data.Add("AirkanController.Operation", "GetVariableList");
                 Trace.TraceError(ex.Message, ex);
                 throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
             }
         }
+
+        [HttpGet]
+        [Route("api/Airkan/GetAirkanInputFiles")]
+        public async Task<IHttpActionResult> GetAirkanInputFiles()
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
+
+                var files = await airkanProcessor.GetAirkanInputFilesAsync();
+
+                return Ok(files);
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "GetAirkanInputFiles");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
+
 
         [HttpPost]
         [Route("api/Airkan/ProcessFile")]

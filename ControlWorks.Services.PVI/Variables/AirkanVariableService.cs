@@ -1,16 +1,16 @@
 ﻿using BR.AN.PviServices;
 
+using ControlWorks.Common;
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
 
 using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using ControlWorks.Common;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -18,14 +18,17 @@ namespace ControlWorks.Services.PVI.Variables
     {
         const string dataTransferVariable = "DataTransfer";
 
-        private static readonly object _syncLock = new object();
+        private static readonly object SyncLock = new object();
         private readonly IEventNotifier _eventNotifier;
         private readonly List<string> _variableNames;
         private readonly FileWatcher _fileWatcher;
-        private Cpu _cpu;
+        private readonly Cpu _cpu;
+        private readonly ConcurrentDictionary<int, string> _inputFiles = new ConcurrentDictionary<int, string>();
 
-        public AirkanVariableService(IEventNotifier eventNotifier)
+
+        public AirkanVariableService(IEventNotifier eventNotifier, Cpu cpu)
         {
+            _cpu = cpu;
             _fileWatcher = new FileWatcher();
             _fileWatcher.FilesChanged += _fileWatcher_FilesChanged;
 
@@ -89,63 +92,54 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (v.Name == "FileNames")
                 {
-                    if (v.Parent is BR.AN.PviServices.Task task)
+                    System.Threading.Tasks.Task.Run(async () => 
                     {
-                        _cpu = task.Parent as Cpu;
+                        await System.Threading.Tasks.Task.Delay(5000);
                         SetFiles(ConfigurationProvider.AirkanNetworkFolder);
-                    }
+                    });
                 }
             }
         }
 
-        private readonly Dictionary<int, string> _inputFiles = new Dictionary<int, string>();
         private void _fileWatcher_FilesChanged(object sender, FileWatchEventArgs e)
         {
             SetFiles(ConfigurationProvider.AirkanNetworkFolder);
         }
 
-        public List<AirkanInputFileInfo> GetAirkanInputFileInfos()
-        {
-            var list = new List<AirkanInputFileInfo>();
-
-            return list;
-
-        }
-
         private void SetFiles(string directory)
         {
-            //if (Directory.Exists(directory))
-            //{
-            //    try
-            //    {
-            //        var files = Directory.GetFiles(directory);
-            //        for (int i = 0; i < files.Length; i++)
-            //        {
-            //            _inputFiles.Add(i + 1, files[i]);
-            //            _cpu.Tasks["DataTransf"].Variables["FileNames"].Value[i] = files[i];
-            //        }
+            Trace.TraceInformation($"Setting input files from {directory}");
+            if (Directory.Exists(directory))
+            {
+                try
+                {
+                    var files = Directory.GetFiles(directory);
+                    for (int i = 0; i < 20; i++)
+                    {
+                        _inputFiles.TryAdd(i + 1, files[i]);
+                        _cpu.Tasks["DataTransf"].Variables["FileNames"].Value[i] = files[i];
+                    }
 
-            //        _cpu.Tasks["DataTransf"].Variables["FileNames"].WriteValue();
-            //    }
-            //    catch (System.Exception e)
-            //    {
-            //        Trace.TraceError($"AirkanVariableService.SetFiles. Error setting files\r\n{e.Message}");
-            //    }
-            //}
-            //else
-            //{
-            //    Trace.TraceError($"AirkanVariableService.SetFiles. Directory {directory} not found");
-            //}
+                    _cpu.Tasks["DataTransf"].Variables["FileNames"].WriteValue();
+                }
+                catch (System.Exception e)
+                {
+                    Trace.TraceError($"AirkanVariableService.SetFiles. Error setting files\r\n{e.Message}");
+                }
+            }
+            else
+            {
+                Trace.TraceError($"AirkanVariableService.SetFiles. Directory {directory} not found");
+            }
         }
 
         private void _eventNotifier_VariableValueChanged(object sender, PviApplicationEventArgs e)
         {
         }
 
-
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
-            lock (_syncLock)
+            lock (SyncLock)
             {
                 switch (commandName)
                 {
@@ -161,6 +155,20 @@ namespace ControlWorks.Services.PVI.Variables
 
                 return new CommandStatus(0, String.Empty);
             }
+        }
+
+        public List<AirkanInputFileInfo> GetAirkanInputFiles()
+        {
+            var list = new List<AirkanInputFileInfo>();
+            foreach (var kvp in _inputFiles)
+            {
+                if (!String.IsNullOrEmpty(kvp.Value))
+                {
+                    list.Add(new AirkanInputFileInfo(kvp.Key, kvp.Value));
+                }
+            }
+
+            return list;
         }
 
         public List<AirkanVariable> GetAirkanVariables(Cpu cpu)
@@ -263,8 +271,8 @@ namespace ControlWorks.Services.PVI.Variables
         {
             var v1 = _cpu.Variables["DataTransfer"];
             var v2 = _cpu.Tasks["DataTransf"].Variables["FileNames"];
-            var v3 = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
-            var v4 = _cpu.Tasks["DataTransf"].Variables["FileSendToDisplay"];
+            var v3 = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"]; //int
+            var v4 = _cpu.Tasks["DataTransf"].Variables["FileSendToDisplay"];//bool
             var v5 = _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"];
             var v6 = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"];
             var v7 = _cpu.Tasks["DataTransf"].Variables["FileLocationDataReturn"];
@@ -337,6 +345,5 @@ namespace ControlWorks.Services.PVI.Variables
             DataType = dataType;
 
         }
-
     }
 }
