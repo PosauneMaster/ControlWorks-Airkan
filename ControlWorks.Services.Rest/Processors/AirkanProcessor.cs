@@ -34,7 +34,7 @@ namespace ControlWorks.Services.Rest.Processors
             await Task.Run(() => _pviApplication.SendCommand(cpuName, command, jsonData));
         }
 
-        public async Task<List<AirkanVariable>> GetAirkanVariablesAsync()
+        public async Task<List<AirkanJob>> GetAirkanVariablesAsync()
         {
             return await Task.Run(() => _pviApplication.GetAirkanVariables(cpuName));
         }

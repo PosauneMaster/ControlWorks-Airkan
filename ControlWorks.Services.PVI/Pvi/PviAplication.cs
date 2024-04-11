@@ -49,7 +49,7 @@ namespace ControlWorks.Services.PVI.Pvi
         CommandStatus SendCommand(string cpuName, string commandName, string commandData);
         List<VariableMapping> FindVariable(string name);
         List<VariableConfiguration> GetVariableConfiguration(string cpuName);
-        List<AirkanVariable> GetAirkanVariables(string cpuName);
+        List<AirkanJob> GetAirkanVariables(string cpuName);
         List<AirkanInputFileInfo> GetAirkanInputFiles();
     }
     public class PviAplication : IPviApplication
@@ -438,7 +438,7 @@ namespace ControlWorks.Services.PVI.Pvi
             return new CommandStatus(1, $"Unable to locate Cpu {cpuName}");
         }
 
-        public List<AirkanVariable> GetAirkanVariables(string cpuName)
+        public List<AirkanJob> GetAirkanVariables(string cpuName)
         {
             var cpu = FindCpu(cpuName);
 
