@@ -93,5 +93,7 @@ namespace ControlWorks.Common
         public static string VariableTasks => ConfigurationManager.AppSettings["VariableTasks"];
         public static string AirkanBartenderFolder => ConfigurationManager.AppSettings["AirkanBartenderFolder"];
         public static string AirkanNetworkFolder => ConfigurationManager.AppSettings["AirkanNetworkFolder"];
+        public static string AirkanConnectionString =>
+            ConfigurationManager.ConnectionStrings["Airkan"].ConnectionString;
     }
 }

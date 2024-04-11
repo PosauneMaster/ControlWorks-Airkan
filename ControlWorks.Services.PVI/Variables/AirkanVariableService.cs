@@ -3,15 +3,12 @@
 using ControlWorks.Common;
 using ControlWorks.Services.PVI.Models;
 
-using Newtonsoft.Json;
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using System.Linq;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -96,7 +93,7 @@ namespace ControlWorks.Services.PVI.Variables
                     System.Threading.Tasks.Task.Run(async () =>
                     {
                         await System.Threading.Tasks.Task.Delay(5000);
-                        SetFiles(ConfigurationProvider.AirkanNetworkFolder);
+                        SetFiles();
                     });
                 }
             }
@@ -104,38 +101,70 @@ namespace ControlWorks.Services.PVI.Variables
 
         private void _fileWatcher_FilesChanged(object sender, FileWatchEventArgs e)
         {
-            SetFiles(ConfigurationProvider.AirkanNetworkFolder);
+            SetFiles();
         }
 
-        private void SetFiles(string directory)
+        private List<string> GetFiles()
         {
-            Trace.TraceInformation($"Setting input files from {directory}");
-            if (Directory.Exists(directory))
-            {
-                try
-                {
-                    var files = Directory.GetFiles(directory);
-                    for (int i = 0; i < 20; i++)
-                    {
-                        _inputFiles.TryAdd(i + 1, files[i]);
-                        _cpu.Tasks["DataTransf"].Variables["FileNames"].Value[i] = files[i];
-                    }
+            DriveInfo[] allDrives = DriveInfo.GetDrives();
 
-                    _cpu.Tasks["DataTransf"].Variables["FileNames"].WriteValue();
-                }
-                catch (System.Exception e)
+            foreach (DriveInfo d in allDrives)
+            {
+                if (d.DriveType == DriveType.Removable)
                 {
-                    Trace.TraceError($"AirkanVariableService.SetFiles. Error setting files\r\n{e.Message}");
+
                 }
+            }
+
+
+
+
+
+
+
+
+            if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
+            {
+                return new List<string>();
+                //USB
             }
             else
             {
-                Trace.TraceError($"AirkanVariableService.SetFiles. Directory {directory} not found");
+                return Directory.GetFiles(ConfigurationProvider.AirkanNetworkFolder).ToList();
+
             }
+        }
+
+        private void SetFiles()
+        {
+            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+
+            var files = GetFiles();
+            for (int i = 0; i < 20; i++)
+            {
+                _inputFiles.TryAdd(i + 1, files[i]);
+                fileNamesVariable.Value[i] = files[i];
+            }
+
+            fileNamesVariable.WriteValue();
+
         }
 
         private void _eventNotifier_VariableValueChanged(object sender, PviApplicationEventArgs e)
         {
+            if (sender is Variable variable)
+            {
+                if (variable.Name == "FileTransferLocation")
+                {
+                    SetFiles();
+                }
+
+                if (variable.Name == "FileSendToDisplay")
+                {
+                    var value = variable.Value;
+                }
+            }
+
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
@@ -179,9 +208,16 @@ namespace ControlWorks.Services.PVI.Variables
 
             for (int i = 0; i < dataTransfer.Members.Count; i++)
             {
+                if (dataTransfer.Members[i]["RunQuantity"].Value <= 0)
+                {
+                    continue;
+                }
+
                 var airkanJob = new AirkanJob();
                 var list = new List<AirkanVariable>();
 
+                list.Add(new AirkanVariable()
+                    { Name = "RunQuantity", Value = dataTransfer.Members[i]["RunQuantity"].Value });
                 list.Add(new AirkanVariable()
                     { Name = "DuctJob.Length_1", Value = dataTransfer.Members[i]["DuctJob.Length_1"].Value });
                 list.Add(new AirkanVariable()
@@ -235,91 +271,44 @@ namespace ControlWorks.Services.PVI.Variables
 
             }
 
-
-            //var value1 = dataTransfer.Members[i]["DuctJob.Length_1"].Value;
-
-            //dataTransfer.Members[i]["DuctJob.Length_1"].Value = split[1];
-            //dataTransfer.Members[i]["DuctJob.Length_2"].Value = split[2];
-            //dataTransfer.Members[i]["DuctJob.Type"].Value = split[3];
-            //dataTransfer.Members[i]["DuctJob.Bead"].Value = split[4];
-            //dataTransfer.Members[i]["DuctJob.Damper"].Value = split[5];
-            //dataTransfer.Members[i]["DuctJob.ConnTypeR"].Value = split[6];
-            //dataTransfer.Members[i]["DuctJob.ConnTypeL"].Value = split[7];
-            //dataTransfer.Members[i]["DuctJob.CleatMode"].Value = split[8];
-            //dataTransfer.Members[i]["DuctJob.CleatType"].Value = split[9];
-            //dataTransfer.Members[i]["DuctJob.LockType"].Value = split[10];
-            //dataTransfer.Members[i]["DuctJob.SealantUsed"].Value = split[1];
-            //dataTransfer.Members[i]["DuctJob.Brake"].Value = split[11];
-            //dataTransfer.Members[i]["DuctJob.Insulation"].Value = split[12];
-            //dataTransfer.Members[i]["DuctJob.PinSpacing"].Value = split[13];
-            //dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value = split[14];
-            //dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value = split[15];
-            //dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value = split[16];
-            //dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value = split[17];
-            //dataTransfer.Members[i]["DuctJob.HoleSize"].Value = split[18];
-            //dataTransfer.Members[i]["Basic.CoilNumber"].Value = split[19];
-            //dataTransfer.Members[i]["Basic.CoilGauge"].Value = split[20];
-            //dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[21];
-            //dataTransfer.Members[i]["Basic.TotalLength"].Value = split[22];
-
-
-
-
-
-
-
-            //Variable dataTransfer = cpu.Variables[dataTransferVariable];
-
-            //foreach (var variableName in _variableNames)
-            //{
-            //    var variable = dataTransfer[variableName];
-            //    list.Add(new AirkanVariable(
-            //        variableName,
-            //        "GLOBAL",
-            //        variable.Address,
-            //        variable.Value,
-            //        variable.IECDataType.ToString()));
-            //}
             return airkanJobList;
         }
-
-
 
         public void Send(Cpu cpu, string commandData)
         {
 
-            Variable dataTransfer = cpu.Variables[dataTransferVariable];
+            //Variable dataTransfer = cpu.Variables[dataTransferVariable];
 
-            var list = new List<string>();
-            var sb = new StringBuilder();
+            //var list = new List<string>();
+            //var sb = new StringBuilder();
 
-            foreach (Variable variable in dataTransfer.Members)
-            {
-                list.Add(variable.Address);
-                if (variable.Members != null)
-                {
-                    foreach (Variable member in variable.Members)
-                    {
-                        sb.AppendLine(member.Address);
-                        list.Add(member.Address);
-                    }
-                }
-            }
+            //foreach (Variable variable in dataTransfer.Members)
+            //{
+            //    list.Add(variable.Address);
+            //    if (variable.Members != null)
+            //    {
+            //        foreach (Variable member in variable.Members)
+            //        {
+            //            sb.AppendLine(member.Address);
+            //            list.Add(member.Address);
+            //        }
+            //    }
+            //}
 
-            var jobQueue = cpu.Variables["JobQueue"]["Jobs"].Members[1];
+            //var jobQueue = cpu.Variables["JobQueue"]["Jobs"].Members[1];
 
-            var sbJobs = new StringBuilder();
-            foreach (Variable job in jobQueue.Members)
-            {
-                sbJobs.AppendLine(job.Address);
-            }
+            //var sbJobs = new StringBuilder();
+            //foreach (Variable job in jobQueue.Members)
+            //{
+            //    sbJobs.AppendLine(job.Address);
+            //}
 
-            File.WriteAllText(@"C:\ControlWorks\AirKan\JobQueueNames_Latest.txt", sbJobs.ToString());
+            //File.WriteAllText(@"C:\ControlWorks\AirKan\JobQueueNames_Latest.txt", sbJobs.ToString());
 
 
             //File.WriteAllText(@"C:\ControlWorks\AirKan\VariableNames_Latest.txt", sb.ToString());
 
-            var airkanVariableList = new List<AirkanVariable>();
+            //var airkanVariableList = new List<AirkanVariable>();
 
             //foreach (var item in list)
             //{
@@ -337,41 +326,50 @@ namespace ControlWorks.Services.PVI.Variables
             //}
 
             //var jsonData = JsonConvert.SerializeObject(airkanVariableList, Formatting.Indented);
-            int counter = 1;
-            var data = JsonConvert.DeserializeObject<List<AirkanVariable>>(commandData);
-            if (data != null)
-            {
-                foreach (AirkanVariable airkanVariable in data)
-                {
-                    Variable variable = dataTransfer[airkanVariable.Address];
+            //int counter = 1;
+            //var data = JsonConvert.DeserializeObject<List<AirkanVariable>>(commandData);
+            //if (data != null)
+            //{
+            //    foreach (AirkanVariable airkanVariable in data)
+            //    {
+            //        Variable variable = dataTransfer[airkanVariable.Address];
 
-                    if (variable.IECDataType == IECDataTypes.STRING) //("string", StringComparison.OrdinalIgnoreCase))
-                    {
-                        variable.Value = $"Test_Value_{counter}";
-                    }
-                    else
-                    {
-                        variable.Value = counter;
-                    }
+            //        if (variable.IECDataType == IECDataTypes.STRING) //("string", StringComparison.OrdinalIgnoreCase))
+            //        {
+            //            variable.Value = $"Test_Value_{counter}";
+            //        }
+            //        else
+            //        {
+            //            variable.Value = counter;
+            //        }
 
-                    counter += 1;
+            //        counter += 1;
 
-                }
+            //    }
 
-                dataTransfer.WriteValue();
-            }
+            //    dataTransfer.WriteValue();
+            //}
         }
 
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
             var v1 = _cpu.Variables["DataTransfer"];
-            var v2 = _cpu.Tasks["DataTransf"].Variables["FileNames"];
-            var v3 = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"]; //int
-            var v4 = _cpu.Tasks["DataTransf"].Variables["FileSendToDisplay"]; //bool
-            var v5 = _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"]; //string
-            var v6 = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"]; //string
-            var v7 = _cpu.Tasks["DataTransf"].Variables["FileLocationDataReturn"]; //string
-            var v8 = _cpu.Tasks["DataTransf"].Variables["ProductFinished"]; //bool
+            var v2 = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+            var v3 = _cpu.Tasks["DataTrans1"].Variables["FileNameToLoad"]; //int
+            var v4 = _cpu.Tasks["DataTrans1"].Variables["FileSendToDisplay"]; //bool
+            var v5 = _cpu.Tasks["DataTrans1"].Variables["FileLocationJobs"]; //string
+            var v6 = _cpu.Tasks["DataTrans1"].Variables["FileLocationPrinter"]; //string
+            var v7 = _cpu.Tasks["DataTrans1"].Variables["FileLocationDataReturn"]; //string
+            var v8 = _cpu.Tasks["DataTrans1"].Variables["ProductFinished"]; //bool
+            var v9 = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"]; //bool
+
+            //v4.Value = true;
+            //v4.WriteValue();
+
+            //v9.Value = true;
+            //v9.WriteValue();
+
+
 
 
 
@@ -385,12 +383,11 @@ namespace ControlWorks.Services.PVI.Variables
             Variable dataTransfer = cpu.Variables[dataTransferVariable];
 
             for (int i = 0; i < lines.Length; i++)
-            //foreach (var line in lines)
             {
                 var split = lines[i].Split(',');
-                if (split.Length > 0)
+                if (split.Length > 22)
                 {
-                    dataTransfer.Members["Qty"].Value = split[0];
+                    dataTransfer.Members[i]["RunQuantity"].Value = split[0];
                     dataTransfer.Members[i]["DuctJob.Length_1"].Value = split[1];
                     dataTransfer.Members[i]["DuctJob.Length_2"].Value = split[2];
                     dataTransfer.Members[i]["DuctJob.Type"].Value = split[3];
@@ -401,19 +398,21 @@ namespace ControlWorks.Services.PVI.Variables
                     dataTransfer.Members[i]["DuctJob.CleatMode"].Value = split[8];
                     dataTransfer.Members[i]["DuctJob.CleatType"].Value = split[9];
                     dataTransfer.Members[i]["DuctJob.LockType"].Value = split[10];
-                    dataTransfer.Members[i]["DuctJob.SealantUsed"].Value = split[1];
-                    dataTransfer.Members[i]["DuctJob.Brake"].Value = split[11];
-                    dataTransfer.Members[i]["DuctJob.Insulation"].Value = split[12];
-                    dataTransfer.Members[i]["DuctJob.PinSpacing"].Value = split[13];
-                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value = split[14];
-                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value = split[15];
-                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value = split[16];
-                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value = split[17];
-                    dataTransfer.Members[i]["DuctJob.HoleSize"].Value = split[18];
-                    dataTransfer.Members[i]["Basic.CoilNumber"].Value = split[19];
-                    dataTransfer.Members[i]["Basic.CoilGauge"].Value = split[20];
-                    dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[21];
-                    dataTransfer.Members[i]["Basic.TotalLength"].Value = split[22];
+                    dataTransfer.Members[i]["DuctJob.SealantUsed"].Value = split[11];
+                    dataTransfer.Members[i]["DuctJob.Brake"].Value = split[12];
+                    dataTransfer.Members[i]["DuctJob.Insulation"].Value = split[13];
+                    dataTransfer.Members[i]["DuctJob.PinSpacing"].Value = split[14];
+                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value = split[15];
+                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value = split[16];
+                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value = split[17];
+                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value = split[18];
+                    dataTransfer.Members[i]["DuctJob.HoleSize"].Value = split[19];
+                    dataTransfer.Members[i]["Basic.CoilNumber"].Value = split[20];
+                    dataTransfer.Members[i]["Basic.CoilGauge"].Value = split[21];
+                    dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[22];
+                    dataTransfer.Members[i]["Basic.TotalLength"].Value = split[23];
+                    dataTransfer.Members[i]["Basic.TotalLength"].Value = split[23];
+
                 }
             }
             dataTransfer.WriteValue();

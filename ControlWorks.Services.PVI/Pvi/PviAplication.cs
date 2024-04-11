@@ -364,12 +364,12 @@ namespace ControlWorks.Services.PVI.Pvi
         {
             if (sender is Variable variable)
             {
-                if (variable.Name == "Status")
+                if (variable.Name == "Heartbeat")
                 {
-                    if (variable.Parent is Cpu cpu)
+                    if (variable.Parent.Parent is Cpu cpu)
                     {
-                        var heartBeatService = new HeartBeatService(cpu);
-                        System.Threading.Tasks.Task.Run(() => heartBeatService.HeartBeat());
+                        var heartBeatService = new HeartBeatService();
+                        System.Threading.Tasks.Task.Run(() => heartBeatService.Run(variable));
                     }
                 }
             }
