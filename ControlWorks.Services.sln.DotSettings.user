@@ -2,6 +2,7 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=004e6c23_002D6f69_002D43ac_002D9c35_002D179c5cf5fe0f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetActiveRecipes_Test" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.BarTenderFileServiceTests.FileTemplateTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.Select_LF2024_PRODUCTION_Test&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Airkan/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
