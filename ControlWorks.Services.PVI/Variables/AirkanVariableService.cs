@@ -63,6 +63,7 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
+                    Trace.TraceInformation("Switching file location to USB");
                     DriveInfo[] allDrives = DriveInfo.GetDrives();
 
                     foreach (DriveInfo d in allDrives)
@@ -79,6 +80,7 @@ namespace ControlWorks.Services.PVI.Variables
                 }
                 else
                 {
+                    Trace.TraceInformation("Switching file location to Network");
                     list.AddRange(Directory.GetFiles(ConfigurationProvider.AirkanNetworkFolder));
                 }
             }
@@ -92,13 +94,14 @@ namespace ControlWorks.Services.PVI.Variables
 
         private void SetFiles()
         {
+            _inputFiles.Clear();
             var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
             if (fileNamesVariable.IsConnected)
             {
                 var files = GetFiles();
                 for (int i = 0; i < files.Count; i++)
                 {
-                    _inputFiles.TryAdd(i + 1, files[i]);
+                    _inputFiles.TryAdd(i, files[i]);
                     fileNamesVariable.Value[i] = files[i];
                 }
 
@@ -117,17 +120,24 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "FileSendToDisplay")
                 {
-                    FileSendToDisplay();
+                    //FileSendToDisplay();
                 }
+
+                if (variable.Name == "FileNameToLoad")
+                {
+                    FileNameToLoad();
+                }
+
             }
         }
 
-        public void FileSendToDisplay()
+        public void FileNameToLoad()
         {
-            var sendToDisplayVariable = _cpu.Tasks["DataTrans1"].Variables["FileSendToDisplay"];
+            var sendToDisplayVariable = _cpu.Tasks["DataTrans1"].Variables["FileNameToLoad"];
             var index = sendToDisplayVariable.Value.ToInt32(null);
             if (_inputFiles.TryGetValue(index, out var path))
             {
+                Trace.TraceInformation($"Processing Index {index} {path}");
                 ProcessInputFile(path, _cpu);
             }
 
@@ -145,6 +155,9 @@ namespace ControlWorks.Services.PVI.Variables
                     case "ProcessFile":
                         ProcessInputFile(commandData, cpu);
                         break;
+                    case "ProcessInputFileByIndex":
+                        ProcessInputFileByIndex(commandData, cpu);
+                        break;
                     default:
                         break;
                 }
@@ -155,13 +168,22 @@ namespace ControlWorks.Services.PVI.Variables
 
         public List<AirkanInputFileInfo> GetAirkanInputFiles()
         {
+            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null);
             var list = new List<AirkanInputFileInfo>();
-            foreach (var kvp in _inputFiles)
+
+            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+            if (fileNamesVariable.IsConnected)
             {
-                if (!String.IsNullOrEmpty(kvp.Value))
+
+                for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
                 {
-                    list.Add(new AirkanInputFileInfo(kvp.Key, kvp.Value));
+                    if (!String.IsNullOrEmpty(fileNamesVariable.Value[i]))
+                    {
+                        list.Add(new AirkanInputFileInfo(i, fileTransferLocation,fileNamesVariable.Value[i]));
+                    }
                 }
+
+                fileNamesVariable.WriteValue();
             }
 
             return list;
@@ -252,18 +274,19 @@ namespace ControlWorks.Services.PVI.Variables
 
         }
 
+        public void ProcessInputFileByIndex(string index, Cpu cpu)
+        {
+            if (Int32.TryParse(index, out var i))
+            {
+                if (_inputFiles.TryGetValue(i, out var file))
+                {
+                    ProcessInputFile(file, cpu);
+                }
+            }
+        }
+
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
-            var v1 = _cpu.Variables["DataTransfer"];
-            var v2 = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
-            var v3 = _cpu.Tasks["DataTrans1"].Variables["FileNameToLoad"]; //int
-            var v4 = _cpu.Tasks["DataTrans1"].Variables["FileSendToDisplay"]; //bool
-            var v5 = _cpu.Tasks["DataTrans1"].Variables["FileLocationJobs"]; //string
-            var v6 = _cpu.Tasks["DataTrans1"].Variables["FileLocationPrinter"]; //string
-            var v7 = _cpu.Tasks["DataTrans1"].Variables["FileLocationDataReturn"]; //string
-            var v8 = _cpu.Tasks["DataTrans1"].Variables["ProductFinished"]; //bool
-            var v9 = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"]; //bool
-
 
             if (!File.Exists(filePath))
             {

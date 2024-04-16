@@ -114,8 +114,24 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
             }
         }
 
+        [HttpPost]
+        [Route("api/Airkan/ProcessFileByIndex")]
+        public async Task<IHttpActionResult> ProcessFileByIndex(int index)
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
 
+                await airkanProcessor.ProcessFileByIndexAsync(index.ToString());
 
-
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "ProcessFile");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
     }
 }

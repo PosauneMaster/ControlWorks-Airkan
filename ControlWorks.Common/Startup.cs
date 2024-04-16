@@ -20,7 +20,7 @@ namespace ControlWorks.Common
             {
                 Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
             }
-
+            
             Trace.Listeners.Add(new ControlWorksListener());
 
             Trace.TraceInformation(new string('*', 30));

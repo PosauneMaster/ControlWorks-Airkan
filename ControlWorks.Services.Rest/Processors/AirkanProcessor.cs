@@ -49,5 +49,11 @@ namespace ControlWorks.Services.Rest.Processors
             await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessFile", filename));
         }
 
+        public async Task ProcessFileByIndexAsync(string index)
+        {
+            await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessInputFileByIndex", index));
+        }
+
+
     }
 }

@@ -29,8 +29,7 @@ namespace ControlWorks.Common.Logging
             {
                 if (args != null && args.Length > 0)
                 {
-                    var ex = args[0] as Exception;
-                    if (ex != null)
+                    if (args[0] is Exception ex)
                     {
                         Logger.Error(ex, $"{source}|{format}");
                         base.TraceEvent(eventCache, source, eventType, id, format, args);
