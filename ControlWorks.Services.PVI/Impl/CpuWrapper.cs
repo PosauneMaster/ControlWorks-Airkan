@@ -79,16 +79,20 @@ namespace ControlWorks.Services.PVI.Impl
 
         private void Connect(CpuInfo cpuInfo)
         {
-            // Visual Studio Mode
             var cpu = new Cpu(_service, cpuInfo.Name);
-            cpu.Connection.DeviceType = DeviceType.TcpIp;
-            cpu.Connection.TcpIp.SourceStation = ConfigurationProvider.SourceStationId;
-            cpu.Connection.TcpIp.DestinationIpAddress = cpuInfo.IpAddress;
 
-            // Panel Mode
-            //var cpu = new Cpu(_service, cpuInfo.Name);
-            //cpu.Connection.DeviceType = DeviceType.ANSLTcp;
-            //cpu.Connection.ANSLTcp.DestinationIpAddress = cpuInfo.IpAddress;
+            if (ConfigurationProvider.CpuConnectionDeviceType.Equals("TcpIp", StringComparison.OrdinalIgnoreCase))
+            {  // Visual Studio Mode
+                cpu.Connection.DeviceType = DeviceType.TcpIp;
+                cpu.Connection.TcpIp.SourceStation = ConfigurationProvider.SourceStationId;
+                cpu.Connection.TcpIp.DestinationIpAddress = cpuInfo.IpAddress;
+            }
+            else if (ConfigurationProvider.CpuConnectionDeviceType.Equals("ANSL", StringComparison.OrdinalIgnoreCase))
+            {
+                // Panel Mode
+                cpu.Connection.DeviceType = DeviceType.ANSLTcp;
+                cpu.Connection.ANSLTcp.DestinationIpAddress = cpuInfo.IpAddress;
+            }
 
             cpu.Connected += Cpu_Connected;
             cpu.Error += Cpu_Error;

@@ -95,5 +95,7 @@ namespace ControlWorks.Common
         public static string AirkanNetworkFolder => ConfigurationManager.AppSettings["AirkanNetworkFolder"];
         public static string AirkanConnectionString =>
             ConfigurationManager.ConnectionStrings["Airkan"].ConnectionString;
+
+        public static string CpuConnectionDeviceType => ConfigurationManager.AppSettings["CpuConnectionDeviceType"];
     }
 }
