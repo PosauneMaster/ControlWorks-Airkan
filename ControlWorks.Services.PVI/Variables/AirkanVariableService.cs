@@ -7,7 +7,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace ControlWorks.Services.PVI.Variables
@@ -57,52 +59,71 @@ namespace ControlWorks.Services.PVI.Variables
 
         private List<string> GetFiles()
         {
-            var list = new List<string>();
-
-            try
+            lock (SyncLock)
             {
-                if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
-                {
-                    Trace.TraceInformation("Switching file location to USB");
-                    DriveInfo[] allDrives = DriveInfo.GetDrives();
+                var list = new List<string>();
 
-                    foreach (DriveInfo d in allDrives)
+                try
+                {
+                    if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                     {
-                        if (d.DriveType == DriveType.Removable && d.IsReady)
+                        Trace.TraceInformation("Switching file location to USB");
+                        DriveInfo[] allDrives = DriveInfo.GetDrives();
+
+                        foreach (DriveInfo d in allDrives)
                         {
-                            var fileInfo = d.RootDirectory.GetFiles();
-                            foreach (var info in fileInfo)
+
+                            if (d.DriveType == DriveType.Removable && d.IsReady)
                             {
-                                list.Add(info.FullName);
+                                var fileNames = d.RootDirectory
+                                    .EnumerateFiles()
+                                    .Where(f => f.Extension == "csv")
+                                    .Select(f => f.FullName);
+
+                                list.AddRange(fileNames);
                             }
                         }
                     }
-                }
-                else
-                {
-                    Trace.TraceInformation("Switching file location to Network");
-                    list.AddRange(Directory.GetFiles(ConfigurationProvider.AirkanNetworkFolder));
-                }
-            }
-            catch (System.Exception e)
-            {
-                Trace.TraceError($"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}", e);
-            }
+                    else
+                    {
+                        var fileNames = Directory
+                            .EnumerateFiles(ConfigurationProvider.AirkanNetworkFolder)
+                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"));
 
-            return list;
+                        Trace.TraceInformation("Switching file location to Network");
+                        list.AddRange(fileNames);
+
+                        //list.AddRange(Directory.GetFiles(ConfigurationProvider.AirkanNetworkFolder));
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Trace.TraceError(
+                        $"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}",
+                        e);
+                }
+
+                return list;
+            }
         }
 
         private void SetFiles()
         {
             _inputFiles.Clear();
             var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+
             if (fileNamesVariable.IsConnected)
             {
+                for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
+                {
+                    fileNamesVariable.Value[i].Assign(String.Empty);
+                }
+
                 var files = GetFiles();
                 for (int i = 0; i < files.Count; i++)
                 {
                     _inputFiles.TryAdd(i, files[i]);
-                    fileNamesVariable.Value[i] = files[i];
+                    fileNamesVariable.Value[i].Assign(files[i]);
                 }
 
                 fileNamesVariable.WriteValue();
@@ -145,6 +166,35 @@ namespace ControlWorks.Services.PVI.Variables
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
+            //cpu.Variables["DataTransfer"].Members[0]["NeoPrintData"]["BarCode"]
+            //DataTransfer[0].NeoPrintData
+            //0 ReferenceERP
+            //1    DeliveryYardERP
+            //2 CustomerOrderERP
+            //3    BarCode
+            //4 PieceNumberERP
+
+            //cpu.Variables["DataTransfer"].Members[0]["CustomerInfo"]["CustomerAddress"]
+
+            //DataTransfer[0].CustomerInfo
+            //CustomerAddress
+            //CustomerName
+
+
+
+
+
+
+
+            //Customer Name
+            //CustomerOrderERP
+            //DeliveryYardERP
+            //ReferenceERP
+            //PieceNumberERP
+            //Customer Name
+            //Customer Address
+
+
             lock (SyncLock)
             {
                 switch (commandName)
@@ -198,7 +248,7 @@ namespace ControlWorks.Services.PVI.Variables
 
                 for (int i = 0; i < dataTransfer.Members.Count; i++)
                 {
-                    if (dataTransfer.Members[i]["RunQuantity"].Value <= 0)
+                    if (dataTransfer.Members[i]["RunQuantity"].Value.ToString(CultureInfo.InvariantCulture) == "0")
                     {
                         continue;
                     }
@@ -255,10 +305,25 @@ namespace ControlWorks.Services.PVI.Variables
                     list.Add(new AirkanVariable()
                     { Name = "Basic.TotalLength", Value = dataTransfer.Members[i]["Basic.TotalLength"].Value });
 
+
+                    list.Add(new AirkanVariable()
+                        { Name = "ReferenceERP", Value = dataTransfer.Members[i]["NeoPrintData"]["ReferenceERP"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "DeliveryYardERP", Value = dataTransfer.Members[i]["NeoPrintData"]["DeliveryYardERP"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "CustomerOrderERP", Value = dataTransfer.Members[i]["NeoPrintData"]["CustomerOrderERP"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "BarCode", Value = dataTransfer.Members[i]["NeoPrintData"]["BarCode"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "PieceNumberERP", Value = dataTransfer.Members[i]["NeoPrintData"]["PieceNumberERP"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "CustomerAddress", Value = dataTransfer.Members[i]["CustomerInfo"]["CustomerAddress"].Value });
+                    list.Add(new AirkanVariable()
+                        { Name = "CustomerAddress", Value = dataTransfer.Members[i]["CustomerInfo"]["CustomerName"].Value });
+
                     airkanJob.LineNumber = i;
                     airkanJob.Variables = new List<AirkanVariable>(list);
                     airkanJobList.Add(airkanJob);
-
                 }
             }
             catch (System.Exception e)
@@ -285,8 +350,50 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        private void ClearDataTransfer()
+        {
+            Variable dataTransfer = _cpu.Variables[dataTransferVariable];
+
+            foreach (Variable member in dataTransfer.Members)
+            {
+                member["RunQuantity"].Value = 0;
+                member["DuctJob.Length_1"].Value = 0;
+                member["DuctJob.Length_2"].Value = 0;
+                member["DuctJob.Type"].Value = 0;
+                member["DuctJob.Bead"].Value = 0;
+                member["DuctJob.Damper"].Value = 0;
+                member["DuctJob.ConnTypeR"].Value = 0;
+                member["DuctJob.ConnTypeL"].Value = 0;
+                member["DuctJob.CleatMode"].Value = 0;
+                member["DuctJob.CleatType"].Value = 0;
+                member["DuctJob.LockType"].Value = 0;
+                member["DuctJob.SealantUsed"].Value = 0;
+                member["DuctJob.Brake"].Value = 0;
+                member["DuctJob.Insulation"].Value = 0;
+                member["DuctJob.PinSpacing"].Value = 0;
+                member["DuctJob.TieRodType_Leg_1"].Value = 0;
+                member["DuctJob.TieRodType_Leg_2"].Value = 0; 
+                member["DuctJob.TieRodHoles_Leg_1"].Value = 0;
+                member["DuctJob.TieRodHoles_Leg_2"].Value = 0;
+                member["DuctJob.HoleSize"].Value = 0;
+                member["Basic.CoilGauge"].Value = 0;
+                member["Basic.CoilWidth"].Value = 0;
+                member["Basic.TotalLength"].Value = 0;
+                member["Basic.TotalLength"].Value = 0;
+                member["NeoPrintData"]["ReferenceERP"].Value = "";
+                member["NeoPrintData"]["DeliveryYardERP"].Value = "";
+                member["NeoPrintData"]["CustomerOrderERP"].Value = "";
+                member["NeoPrintData"]["BarCode"].Value = "";
+                member["NeoPrintData"]["PieceNumberERP"].Value = "";
+                member["CustomerInfo"]["CustomerAddress"].Value = "";
+                member["CustomerInfo"]["CustomerName"].Value = "";
+
+            }
+        }
+
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
+            ClearDataTransfer();
 
             if (!File.Exists(filePath))
             {
@@ -302,31 +409,41 @@ namespace ControlWorks.Services.PVI.Variables
                 var split = lines[i].Split(',');
                 if (split.Length > 22)
                 {
-                    dataTransfer.Members[i]["RunQuantity"].Value = split[0];
-                    dataTransfer.Members[i]["DuctJob.Length_1"].Value = split[1];
-                    dataTransfer.Members[i]["DuctJob.Length_2"].Value = split[2];
-                    dataTransfer.Members[i]["DuctJob.Type"].Value = split[3];
-                    dataTransfer.Members[i]["DuctJob.Bead"].Value = split[4];
-                    dataTransfer.Members[i]["DuctJob.Damper"].Value = split[5];
-                    dataTransfer.Members[i]["DuctJob.ConnTypeR"].Value = split[6];
-                    dataTransfer.Members[i]["DuctJob.ConnTypeL"].Value = split[7];
-                    dataTransfer.Members[i]["DuctJob.CleatMode"].Value = split[8];
-                    dataTransfer.Members[i]["DuctJob.CleatType"].Value = split[9];
-                    dataTransfer.Members[i]["DuctJob.LockType"].Value = split[10];
-                    dataTransfer.Members[i]["DuctJob.SealantUsed"].Value = split[11];
-                    dataTransfer.Members[i]["DuctJob.Brake"].Value = split[12];
-                    dataTransfer.Members[i]["DuctJob.Insulation"].Value = split[13];
-                    dataTransfer.Members[i]["DuctJob.PinSpacing"].Value = split[14];
-                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value = split[15];
-                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value = split[16];
-                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value = split[17];
-                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value = split[18];
-                    dataTransfer.Members[i]["DuctJob.HoleSize"].Value = split[19];
-                    dataTransfer.Members[i]["Basic.CoilNumber"].Value = split[20];
-                    dataTransfer.Members[i]["Basic.CoilGauge"].Value = split[21];
-                    dataTransfer.Members[i]["Basic.CoilWidth"].Value = split[22];
-                    dataTransfer.Members[i]["Basic.TotalLength"].Value = split[23];
-                    dataTransfer.Members[i]["Basic.TotalLength"].Value = split[23];
+                    dataTransfer.Members[i]["RunQuantity"].Value.Assign(split[0]);
+                    dataTransfer.Members[i]["DuctJob.Length_1"].Value.Assign(split[1]);
+                    dataTransfer.Members[i]["DuctJob.Length_2"].Value.Assign(split[2]);
+                    dataTransfer.Members[i]["DuctJob.Type"].Value.Assign(split[3]);
+                    dataTransfer.Members[i]["DuctJob.Bead"].Value.Assign(split[4]);
+                    dataTransfer.Members[i]["DuctJob.Damper"].Value.Assign(split[5]);
+                    dataTransfer.Members[i]["DuctJob.ConnTypeR"].Value.Assign(split[6]);
+                    dataTransfer.Members[i]["DuctJob.ConnTypeL"].Value.Assign(split[7]);
+                    dataTransfer.Members[i]["DuctJob.CleatMode"].Value.Assign(split[8]);
+                    dataTransfer.Members[i]["DuctJob.CleatType"].Value.Assign(split[9]);
+                    dataTransfer.Members[i]["DuctJob.LockType"].Value.Assign(split[10]);
+                    dataTransfer.Members[i]["DuctJob.SealantUsed"].Value.Assign(split[11]);
+                    dataTransfer.Members[i]["DuctJob.Brake"].Value.Assign(split[12]);
+                    dataTransfer.Members[i]["DuctJob.Insulation"].Value.Assign(split[13]);
+                    dataTransfer.Members[i]["DuctJob.PinSpacing"].Value.Assign(split[14]);
+                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_1"].Value.Assign(split[15]);
+                    dataTransfer.Members[i]["DuctJob.TieRodType_Leg_2"].Value.Assign(split[16]);
+                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_1"].Value.Assign(split[17]);
+                    dataTransfer.Members[i]["DuctJob.TieRodHoles_Leg_2"].Value.Assign(split[18]);
+                    dataTransfer.Members[i]["DuctJob.HoleSize"].Value.Assign(split[19]);
+                    dataTransfer.Members[i]["Basic.CoilNumber"].Value.Assign(split[20]);
+                    dataTransfer.Members[i]["Basic.CoilGauge"].Value.Assign(split[21]);
+                    dataTransfer.Members[i]["Basic.CoilWidth"].Value.Assign(split[22]);
+                    dataTransfer.Members[i]["Basic.TotalLength"].Value.Assign(split[23]);
+                    dataTransfer.Members[i]["NeoPrintData"]["ReferenceERP"].Value.Assign(split[24]);
+
+                    if (split.Length > 25)
+                    {
+                        dataTransfer.Members[i]["NeoPrintData"]["DeliveryYardERP"].Value.Assign(split[25]);
+                        dataTransfer.Members[i]["NeoPrintData"]["CustomerOrderERP"].Value.Assign(split[26]);
+                        dataTransfer.Members[i]["NeoPrintData"]["BarCode"].Value.Assign(split[27]);
+                        dataTransfer.Members[i]["NeoPrintData"]["PieceNumberERP"].Value.Assign(split[28]);
+                        dataTransfer.Members[i]["CustomerInfo"]["CustomerAddress"].Value.Assign(split[29]);
+                        dataTransfer.Members[i]["CustomerInfo"]["CustomerName"].Value.Assign(split[30]);
+                    }
 
                 }
             }
