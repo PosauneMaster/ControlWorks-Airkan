@@ -128,10 +128,52 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
             }
             catch (Exception ex)
             {
-                ex.Data.Add("AirkanController.Operation", "ProcessFile");
+                ex.Data.Add("AirkanController.Operation", "ProcessFileByIndex");
                 Trace.TraceError(ex.Message, ex);
                 throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
             }
         }
+
+        [HttpPost]
+        [Route("api/Airkan/SetFileTransferLocation")]
+        public async Task<IHttpActionResult> SetFileTransferLocation(string location)
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
+
+                await airkanProcessor.ProcessSetFileTransferLocation(location);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "SetFileTransferLocation");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
+
+        [HttpPost]
+        [Route("api/Airkan/ProcessBarCode")]
+        public async Task<IHttpActionResult> ProcessBarCode()
+        {
+            try
+            {
+                var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
+
+                await airkanProcessor.ProcessBarCode();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("AirkanController.Operation", "ProcessBarCode");
+                Trace.TraceError(ex.Message, ex);
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
+        }
+
+
     }
 }

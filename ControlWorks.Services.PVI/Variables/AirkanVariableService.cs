@@ -72,15 +72,18 @@ namespace ControlWorks.Services.PVI.Variables
 
                         foreach (DriveInfo d in allDrives)
                         {
-
                             if (d.DriveType == DriveType.Removable && d.IsReady)
                             {
-                                var fileNames = d.RootDirectory
-                                    .EnumerateFiles()
-                                    .Where(f => f.Extension == "csv")
-                                    .Select(f => f.FullName);
-
-                                list.AddRange(fileNames);
+                                var files = d.RootDirectory.GetFiles();
+                                {
+                                    foreach (var fi in files)
+                                    {
+                                        if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
+                                        {
+                                            list.Add(fi.FullName);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -92,8 +95,6 @@ namespace ControlWorks.Services.PVI.Variables
 
                         Trace.TraceInformation("Switching file location to Network");
                         list.AddRange(fileNames);
-
-                        //list.AddRange(Directory.GetFiles(ConfigurationProvider.AirkanNetworkFolder));
                     }
                 }
                 catch (System.Exception e)
@@ -139,9 +140,9 @@ namespace ControlWorks.Services.PVI.Variables
                     SetFiles();
                 }
 
-                if (variable.Name == "FileSendToDisplay")
+                if (variable.Name == "ProductFinished")
                 {
-                    //FileSendToDisplay();
+                    ProcessBarCode(variable);
                 }
 
                 if (variable.Name == "FileNameToLoad")
@@ -164,36 +165,50 @@ namespace ControlWorks.Services.PVI.Variables
 
         }
 
+        public void ProcessBarCode(Variable variable = null)
+        {
+            if (variable != null)
+            {
+                if (variable.Value != 1)
+                {
+                    return;
+                }
+            }
+
+            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+
+            var btwFileName = dataTransferCompletedParts["FileName"].Value.ToString(CultureInfo.InvariantCulture);
+            var maat1 = dataTransferCompletedParts["DuctJob.Length_1"].Value.ToString(CultureInfo.InvariantCulture);
+            var maat2 = dataTransferCompletedParts["DuctJob.Length_2"].Value.ToString(CultureInfo.InvariantCulture);
+            var type = dataTransferCompletedParts["DuctJob.Type"].Value.ToString(CultureInfo.InvariantCulture);
+            var kader1 = dataTransferCompletedParts["DuctJob.ConnTypeR"].Value.ToString(CultureInfo.InvariantCulture);
+            var kader2 = dataTransferCompletedParts["DuctJob.ConnTypeL"].Value.ToString(CultureInfo.InvariantCulture);
+            var dikte = dataTransferCompletedParts["Basic.CoilGauge"].Value.ToString(CultureInfo.InvariantCulture);
+            var lengte = dataTransferCompletedParts["Basic.CoilWidth"].Value.ToString(CultureInfo.InvariantCulture);
+            var werf = dataTransferCompletedParts["NeoPrintData.DeliveryYardERP"].Value.ToString(CultureInfo.InvariantCulture);
+            var ordernummer = dataTransferCompletedParts["NeoPrintData.CustomerOrderERP"].Value.ToString(CultureInfo.InvariantCulture);
+            var barcode = dataTransferCompletedParts["NeoPrintData.BarCode"].Value.ToString(CultureInfo.InvariantCulture);
+            var stuknr = dataTransferCompletedParts["NeoPrintData.PieceNumberERP"].Value.ToString(CultureInfo.InvariantCulture);
+            var klantreferentie = dataTransferCompletedParts["CustomerInfo.CustomerName"].Value.ToString(CultureInfo.InvariantCulture);
+
+            BarTenderFileService bartenderService = new BarTenderFileService();
+            var fileDeDetails = bartenderService.FileDetails(btwFileName, ordernummer, werf, klantreferentie, barcode, kader1, kader2, maat1,
+                maat2, stuknr, type, lengte, dikte);
+
+
+            
+            
+            
+            
+            
+
+
+        }
+
+
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
-            //cpu.Variables["DataTransfer"].Members[0]["NeoPrintData"]["BarCode"]
-            //DataTransfer[0].NeoPrintData
-            //0 ReferenceERP
-            //1    DeliveryYardERP
-            //2 CustomerOrderERP
-            //3    BarCode
-            //4 PieceNumberERP
-
-            //cpu.Variables["DataTransfer"].Members[0]["CustomerInfo"]["CustomerAddress"]
-
-            //DataTransfer[0].CustomerInfo
-            //CustomerAddress
-            //CustomerName
-
-
-
-
-
-
-
-            //Customer Name
-            //CustomerOrderERP
-            //DeliveryYardERP
-            //ReferenceERP
-            //PieceNumberERP
-            //Customer Name
-            //Customer Address
-
+            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
 
             lock (SyncLock)
             {
@@ -208,12 +223,38 @@ namespace ControlWorks.Services.PVI.Variables
                     case "ProcessInputFileByIndex":
                         ProcessInputFileByIndex(commandData, cpu);
                         break;
+                    case "SetFileTransferLocation":
+                        SetFileTransferLocation(commandData, cpu);
+                        break;
+                    case "ProcessBarCode":
+                        ProcessBarCode();
+                        break;
+
                     default:
                         break;
                 }
 
                 return new CommandStatus(0, String.Empty);
             }
+        }
+
+        public void SetFileTransferLocation(string command, Cpu cpu)
+        {
+            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"];
+
+            if (command.Equals("USB", StringComparison.OrdinalIgnoreCase))
+            {
+                _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(true);
+            }
+            else
+            {
+                {
+                    _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(false);
+                }
+            }
+
+            _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].WriteValue();
+
         }
 
         public List<AirkanInputFileInfo> GetAirkanInputFiles()

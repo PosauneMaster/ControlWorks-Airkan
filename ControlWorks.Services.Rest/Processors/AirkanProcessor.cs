@@ -54,6 +54,15 @@ namespace ControlWorks.Services.Rest.Processors
             await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessInputFileByIndex", index));
         }
 
+        public async Task ProcessSetFileTransferLocation(string location)
+        {
+            await Task.Run(() => _pviApplication.SendCommand(cpuName, "SetFileTransferLocation", location));
+        }
+
+        public async Task ProcessBarCode()
+        {
+            await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessBarCode", ""));
+        }
 
     }
 }
