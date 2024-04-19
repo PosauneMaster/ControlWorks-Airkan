@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ControlWorks.Airkan.Tests
 {
@@ -31,9 +32,16 @@ namespace ControlWorks.Airkan.Tests
             string dikte = "0,75";
 
             var bartenderService = new BarTenderFileService();
-            var fileDeDetails = bartenderService.FileDetails(btwFileName,ordernummer, werf, klantreferentie, barcode, kaderl, kader2, maat1,
+            var fileDetails = bartenderService.FileDetails(btwFileName,ordernummer, werf, klantreferentie, barcode, kaderl, kader2, maat1,
                 maat2, stuknr, type, lengte, dikte);
-                
+
+            var json = JsonConvert.SerializeObject(bartenderService);
+
+
+
+
+
+
         }
     }
 }

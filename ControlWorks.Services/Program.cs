@@ -1,4 +1,5 @@
 ﻿using ControlWorks.Common;
+using ControlWorks.Common.Logging;
 
 using System;
 using System.Diagnostics;
@@ -15,6 +16,8 @@ namespace ControlWorks.Services
         {
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            Trace.Listeners.Add(new ControlWorksListener());
+
 
             Startup.Initialize();
 

@@ -9,8 +9,10 @@ using ControlWorks.Services.PVI.Variables;
 
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -321,6 +323,7 @@ namespace ControlWorks.Services.PVI.Pvi
 
             _variableManager = e.VariableManager;
 
+            Trace.Listeners.Remove("configConsoleListener");
             Trace.TraceInformation(e.Message);
 
             if (_cpuManager == null)

@@ -59,9 +59,9 @@ namespace ControlWorks.Services.Rest.Processors
             await Task.Run(() => _pviApplication.SendCommand(cpuName, "SetFileTransferLocation", location));
         }
 
-        public async Task ProcessBarCode()
+        public async Task ProcessBarCodeFromFile(string filePath)
         {
-            await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessBarCode", ""));
+            await Task.Run(() => _pviApplication.SendCommand(cpuName, "ProcessBarCodeFromFile", filePath));
         }
 
     }

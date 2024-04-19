@@ -155,20 +155,20 @@ namespace ControlWorks.Services.Rest.Controllers.ControlWorks
         }
 
         [HttpPost]
-        [Route("api/Airkan/ProcessBarCode")]
-        public async Task<IHttpActionResult> ProcessBarCode()
+        [Route("api/Airkan/ProcessBarCodeFromFile")]
+        public async Task<IHttpActionResult> ProcessBarCodeFromFile(string filePath)
         {
             try
             {
                 var airkanProcessor = new AirkanProcessor(WebApiApplication.PviApp);
 
-                await airkanProcessor.ProcessBarCode();
+                await airkanProcessor.ProcessBarCodeFromFile(filePath);
 
                 return Ok();
             }
             catch (Exception ex)
             {
-                ex.Data.Add("AirkanController.Operation", "ProcessBarCode");
+                ex.Data.Add("AirkanController.Operation", "ProcessBarCodeFromFile");
                 Trace.TraceError(ex.Message, ex);
                 throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
             }

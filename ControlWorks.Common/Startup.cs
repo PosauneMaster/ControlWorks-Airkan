@@ -21,8 +21,6 @@ namespace ControlWorks.Common
                 Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
             }
             
-            Trace.Listeners.Add(new ControlWorksListener());
-
             Trace.TraceInformation(new string('*', 30));
             Trace.TraceInformation("Starting application...");
             Trace.TraceInformation(new string('*', 30));
