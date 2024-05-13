@@ -18,6 +18,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Services.PVI",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlWorks.Airkan.Tests", "ControlWorks.Airkan.Tests\ControlWorks.Airkan.Tests.csproj", "{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{799CBDAB-49F5-4EC3-AC70-8C5DE91507C2}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ControlWorks.Setup", "ControlWorks.Setup\ControlWorks.Setup.vdproj", "{68A4BB14-7800-4BAC-A7E7-2342B20DC19E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +70,10 @@ Global
 		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|x86.ActiveCfg = Release|Any CPU
 		{D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C}.Release|x86.Build.0 = Release|Any CPU
+		{68A4BB14-7800-4BAC-A7E7-2342B20DC19E}.Debug|Any CPU.ActiveCfg = Debug
+		{68A4BB14-7800-4BAC-A7E7-2342B20DC19E}.Debug|x86.ActiveCfg = Debug
+		{68A4BB14-7800-4BAC-A7E7-2342B20DC19E}.Release|Any CPU.ActiveCfg = Release
+		{68A4BB14-7800-4BAC-A7E7-2342B20DC19E}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
