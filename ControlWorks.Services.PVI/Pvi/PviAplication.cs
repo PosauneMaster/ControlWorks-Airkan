@@ -108,11 +108,6 @@ namespace ControlWorks.Services.PVI.Pvi
                 Directory.CreateDirectory(ConfigurationProvider.BaseDirectory);
             }
 
-            var dbPath = Path.Combine(ConfigurationProvider.BaseDirectory, "Database");
-            if(!Directory.Exists(dbPath))
-            {
-                Directory.CreateDirectory(dbPath);
-            }
         }
 
         public ServiceDetail ServiceDetails()

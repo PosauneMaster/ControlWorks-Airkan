@@ -1,4 +1,5 @@
-﻿using ControlWorks.Common.Logging;
+﻿using System;
+using ControlWorks.Common.Logging;
 
 using System.Diagnostics;
 using System.IO;
@@ -9,27 +10,39 @@ namespace ControlWorks.Common
     {
         public static void Initialize()
         {
-            if (!Directory.Exists(ConfigurationProvider.BaseDirectory))
+            try
             {
-                Directory.CreateDirectory(ConfigurationProvider.BaseDirectory);
+                if (!Directory.Exists(ConfigurationProvider.BaseDirectory))
+                {
+                    Directory.CreateDirectory(ConfigurationProvider.BaseDirectory);
+                }
+
+                ConfigurationProvider.SettingsDirectory = Path.Combine(ConfigurationProvider.BaseDirectory, "Settings");
+
+                if (!Directory.Exists(ConfigurationProvider.SettingsDirectory))
+                {
+                    Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
+                }
+
+                if (!Directory.Exists(ConfigurationProvider.AirkanNetworkFolder))
+                {
+                    Directory.CreateDirectory(ConfigurationProvider.AirkanNetworkFolder);
+                }
+
+                Trace.TraceInformation(new string('*', 30));
+                Trace.TraceInformation("Starting application...");
+                Trace.TraceInformation(new string('*', 30));
+
+                Trace.TraceInformation("Starting Initialization...");
+
+
+                WriteStartupLog();
+                Trace.TraceInformation("Initialization Complete.");
             }
-
-            ConfigurationProvider.SettingsDirectory = Path.Combine(ConfigurationProvider.BaseDirectory, "Settings");
-
-            if (!Directory.Exists(ConfigurationProvider.SettingsDirectory))
+            catch (Exception e)
             {
-                Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
+                Trace.TraceError($"StartUp failed to initialize. {e.Message}\r\n{e}");
             }
-            
-            Trace.TraceInformation(new string('*', 30));
-            Trace.TraceInformation("Starting application...");
-            Trace.TraceInformation(new string('*', 30));
-
-            Trace.TraceInformation("Starting Initialization...");
-
-
-            WriteStartupLog();
-            Trace.TraceInformation("Initialization Complete.");
         }
 
 
