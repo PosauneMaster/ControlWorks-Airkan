@@ -66,7 +66,7 @@ namespace ControlWorks.Services.PVI.Variables
 
                 try
                 {
-                    if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
+                    if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                     {
                         Trace.TraceInformation("Switching file location to USB");
                         DriveInfo[] allDrives = DriveInfo.GetDrives();
@@ -112,7 +112,7 @@ namespace ControlWorks.Services.PVI.Variables
         private void SetFiles()
         {
             _inputFiles.Clear();
-            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+            var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
 
             if (fileNamesVariable.IsConnected)
             {
@@ -156,19 +156,22 @@ namespace ControlWorks.Services.PVI.Variables
 
         public void FileNameToLoad()
         {
-            var sendToDisplayVariable = _cpu.Tasks["DataTrans1"].Variables["FileNameToLoad"];
-            var index = sendToDisplayVariable.Value.ToInt32(null);
-            if (_inputFiles.TryGetValue(index, out var path))
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileNameToLoad"))
             {
-                Trace.TraceInformation($"Processing Index {index} {path}");
-                ProcessInputFile(path, _cpu);
+                var sendToDisplayVariable = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
+                var index = sendToDisplayVariable.Value.ToInt32(null);
+                if (_inputFiles.TryGetValue(index, out var path))
+                {
+                    Trace.TraceInformation($"Processing Index {index} {path}");
+                    ProcessInputFile(path, _cpu);
+                }
             }
 
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
-            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+            var dataTransferCompletedParts = _cpu.Tasks["DataTransf"].Variables["DataTransferCompletedParts"];
 
             lock (SyncLock)
             {
@@ -200,14 +203,14 @@ namespace ControlWorks.Services.PVI.Variables
 
         private void ProcessBarcodeFromFile(string filePath, Cpu cpu)
         {
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].Value.Assign(false);
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].Value.Assign(false);
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].WriteValue();
 
             var json = File.ReadAllText(filePath);
             var bartender = JsonConvert.DeserializeObject<BarTenderFileService>(json);
 
 
-            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+            var dataTransferCompletedParts = _cpu.Tasks["DataTransf"].Variables["DataTransferCompletedParts"];
 
             dataTransferCompletedParts["FileName"].AssignChecked(bartender.BtwFileName);
             dataTransferCompletedParts["NeoPrintData.CustomerOrderERP"].AssignChecked(bartender.Ordernummer);
@@ -224,35 +227,35 @@ namespace ControlWorks.Services.PVI.Variables
             dataTransferCompletedParts["Basic.CoilGauge"].AssignChecked(bartender.Dikte);
             dataTransferCompletedParts.WriteValue();
 
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].AssignChecked(true);
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].AssignChecked(true);
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].WriteValue();
         }
 
         public void SetFileTransferLocation(string command, Cpu cpu)
         {
-            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"];
+            var fileTransferLocation = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"];
 
             if (command.Equals("USB", StringComparison.OrdinalIgnoreCase))
             {
-                _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(true);
+                _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.Assign(true);
             }
             else
             {
                 {
-                    _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(false);
+                    _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.Assign(false);
                 }
             }
 
-            _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].WriteValue();
 
         }
 
         public List<AirkanInputFileInfo> GetAirkanInputFiles()
         {
-            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null);
+            var fileTransferLocation = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null);
             var list = new List<AirkanInputFileInfo>();
 
-            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+            var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
             if (fileNamesVariable.IsConnected)
             {
 

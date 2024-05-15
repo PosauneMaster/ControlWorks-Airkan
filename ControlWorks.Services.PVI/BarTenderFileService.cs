@@ -79,7 +79,7 @@ namespace ControlWorks.Services.PVI
                 }
             }
 
-            var dataTransferCompletedParts = cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+            var dataTransferCompletedParts = cpu.Tasks["DataTransf"].Variables["DataTransferCompletedParts"];
 
             if (!dataTransferCompletedParts.IsConnected)
             {
@@ -117,8 +117,8 @@ namespace ControlWorks.Services.PVI
                     Trace.TraceError($"Cannot file folder {ConfigurationProvider.AirkanBartenderFolder}.  Check setting for AirkanBartenderFolder");
                 }
             }
-            cpu.Tasks["DataTrans1"].Variables["ProductFinished"].Value.Assign(false);
-            cpu.Tasks["DataTrans1"].Variables["ProductFinished"].WriteValue();
+            cpu.Tasks["DataTransf"].Variables["ProductFinished"].Value.Assign(false);
+            cpu.Tasks["DataTransf"].Variables["ProductFinished"].WriteValue();
 
         }
 
