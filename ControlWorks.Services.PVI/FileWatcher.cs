@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace ControlWorks.Services.PVI
 {
-    public class FileWatcher
+    public class FileWatcher : IDisposable
     {
         private readonly FileSystemWatcher _watcher;
         private readonly MemoryCache _memCache;
@@ -17,33 +17,39 @@ namespace ControlWorks.Services.PVI
 
         public event EventHandler<FileWatchEventArgs> FilesChanged;
 
-        public FileWatcher()
+        public string DirectoryPath { get; set; }
+
+        public FileWatcher(string directory)
         {
-            _memCache = MemoryCache.Default;
-            _cacheItemPolicy = new CacheItemPolicy()
+            if (!String.IsNullOrEmpty(directory) && Directory.Exists(directory))
             {
-                RemovedCallback = OnRemovedFromCache
-            };
+                _memCache = MemoryCache.Default;
+                _cacheItemPolicy = new CacheItemPolicy()
+                {
+                    RemovedCallback = OnRemovedFromCache
+                };
 
-            _watcher = new FileSystemWatcher(ConfigurationProvider.AirkanNetworkFolder);
+                DirectoryPath = directory;
+                _watcher = new FileSystemWatcher(directory);
 
-            _watcher.NotifyFilter = NotifyFilters.Attributes
-                                   | NotifyFilters.CreationTime
-                                   | NotifyFilters.DirectoryName
-                                   | NotifyFilters.FileName
-                                   | NotifyFilters.LastAccess
-                                   | NotifyFilters.LastWrite
-                                   | NotifyFilters.Security
-                                   | NotifyFilters.Size;
+                _watcher.NotifyFilter = NotifyFilters.Attributes
+                                        | NotifyFilters.CreationTime
+                                        | NotifyFilters.DirectoryName
+                                        | NotifyFilters.FileName
+                                        | NotifyFilters.LastAccess
+                                        | NotifyFilters.LastWrite
+                                        | NotifyFilters.Security
+                                        | NotifyFilters.Size;
 
-            _watcher.Changed += OnNetworkFilesChanged;
-            _watcher.Deleted += OnNetworkFilesChanged;
-            _watcher.Created += OnNetworkFilesChanged;
-            _watcher.Renamed += OnNetworkFilesChanged;
+                _watcher.Changed += OnNetworkFilesChanged;
+                _watcher.Deleted += OnNetworkFilesChanged;
+                _watcher.Created += OnNetworkFilesChanged;
+                _watcher.Renamed += OnNetworkFilesChanged;
 
-            _watcher.Filter = "*.*";
-            _watcher.IncludeSubdirectories = true;
-            _watcher.EnableRaisingEvents = true;
+                _watcher.Filter = "*.*";
+                _watcher.IncludeSubdirectories = true;
+                _watcher.EnableRaisingEvents = true;
+            }
         }
 
         private void OnFilesChanged(FileWatchEventArgs args)
@@ -76,6 +82,12 @@ namespace ControlWorks.Services.PVI
             Trace.TraceInformation($"File Watch Triggered for {e}");
 
             OnFilesChanged(new FileWatchEventArgs() {Directory = ConfigurationProvider.AirkanNetworkFolder });
+        }
+
+        public void Dispose()
+        {
+            _watcher?.Dispose();
+            _memCache?.Dispose();
         }
     }
 

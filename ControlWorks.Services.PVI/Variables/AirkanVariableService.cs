@@ -9,7 +9,6 @@ using System.Reflection;
 
 using BR.AN.PviServices;
 
-using ControlWorks.Common;
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
@@ -22,21 +21,26 @@ namespace ControlWorks.Services.PVI.Variables
 
         private static readonly object SyncLock = new object();
         private readonly IEventNotifier _eventNotifier;
-        private readonly FileWatcher _fileWatcher;
+        private FileWatcher _fileWatcher;
         private readonly Cpu _cpu;
         private readonly ConcurrentDictionary<int, string> _inputFiles = new ConcurrentDictionary<int, string>();
+        private readonly UsbMonitor _monitor;
 
         public AirkanVariableService(IEventNotifier eventNotifier, Cpu cpu)
         {
             _cpu = cpu;
-            _fileWatcher = new FileWatcher();
-            _fileWatcher.FilesChanged += _fileWatcher_FilesChanged;
 
             _eventNotifier = eventNotifier;
             _eventNotifier.VariableValueChanged += _eventNotifier_VariableValueChanged;
             _eventNotifier.VariableConnected += _eventNotifier_VariableConnected;
 
-       }
+            _monitor = new UsbMonitor();
+            _monitor.DriveChanged += (sender, args) =>
+            {
+                SetFiles();
+            };
+            System.Threading.Tasks.Task.Run(() => _monitor.Run());
+        }
 
         private void _eventNotifier_VariableConnected(object sender, PviApplicationEventArgs e)
         {
@@ -53,82 +57,127 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
-        private void _fileWatcher_FilesChanged(object sender, FileWatchEventArgs e)
-        {
-            SetFiles();
-        }
-
         private List<string> GetFiles()
         {
-            lock (SyncLock)
+            var list = new List<string>();
+
+            try
             {
-                var list = new List<string>();
-
-                try
+                if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
-                    if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
-                    {
-                        Trace.TraceInformation("Switching file location to USB");
-                        DriveInfo[] allDrives = DriveInfo.GetDrives();
+                    Trace.TraceInformation("Switching file location to USB");
+                    DriveInfo[] allDrives = DriveInfo.GetDrives();
 
-                        foreach (DriveInfo d in allDrives)
+                    foreach (DriveInfo d in allDrives)
+                    {
+                        if (d.DriveType == DriveType.Removable && d.IsReady)
                         {
-                            if (d.DriveType == DriveType.Removable && d.IsReady)
+                            var files = d.RootDirectory.GetFiles();
                             {
-                                var files = d.RootDirectory.GetFiles();
+                                foreach (var fi in files)
                                 {
-                                    foreach (var fi in files)
+                                    if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
                                     {
-                                        if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
-                                        {
-                                            list.Add(fi.FullName);
-                                        }
+                                        list.Add(fi.FullName);
                                     }
                                 }
                             }
                         }
                     }
-                    else
+                }
+                else
+                {
+                    var directoryPath = GetFileLocationJobs();
+
+                    if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
                         var fileNames = Directory
-                            .EnumerateFiles(ConfigurationProvider.AirkanNetworkFolder)
+                            .EnumerateFiles(directoryPath)
                             .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"));
 
                         Trace.TraceInformation("Switching file location to Network");
                         list.AddRange(fileNames);
+
+                        SetFileWatcher(directoryPath);
+
+                    }
+                    else
+                    {
+                        Trace.TraceError($"The directory path {directoryPath} is not found");
                     }
                 }
-                catch (System.Exception e)
-                {
-                    Trace.TraceError(
-                        $"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}",
-                        e);
-                }
-
-                return list;
             }
+            catch (System.Exception e)
+            {
+                Trace.TraceError(
+                    $"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}",
+                    e);
+            }
+
+            return list;
+        }
+
+        private void SetFileWatcher(string path)
+        {
+            if (String.IsNullOrWhiteSpace(path))
+            {
+                Trace.TraceError("SetFileWatcher: The directory path is empty");
+                return;
+            }
+
+            if (!Directory.Exists(path))
+            {
+                Trace.TraceError("SetFileWatcher: The directory path is not found");
+                return;
+            }
+
+            if (_fileWatcher != null && _fileWatcher.DirectoryPath.Equals(path))
+            {
+                return;
+            }
+
+            _fileWatcher?.Dispose();
+            _fileWatcher = new FileWatcher(path);
+            _fileWatcher.FilesChanged += (sender, args) =>
+            {
+                SetFiles();
+            };
+        }
+
+        private string GetFileLocationJobs()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+            {
+                return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return String.Empty;
+
         }
 
         private void SetFiles()
         {
-            _inputFiles.Clear();
-            var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
-
-            if (fileNamesVariable.IsConnected)
+            lock (SyncLock)
             {
-                for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
-                {
-                    fileNamesVariable.Value[i].Assign(String.Empty);
-                }
+                _inputFiles.Clear();
+                var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
 
-                var files = GetFiles();
-                for (int i = 0; i < files.Count; i++)
+                if (fileNamesVariable.IsConnected)
                 {
-                    _inputFiles.TryAdd(i, files[i]);
-                    fileNamesVariable.Value[i].Assign(files[i]);
-                }
+                    for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
+                    {
+                        fileNamesVariable.Value[i].Assign(String.Empty);
+                    }
 
-                fileNamesVariable.WriteValue();
+                    var files = GetFiles();
+                    for (int i = 0; i < files.Count; i++)
+                    {
+                        _inputFiles.TryAdd(i, files[i]);
+                        fileNamesVariable.Value[i].Assign(files[i]);
+                    }
+
+                    fileNamesVariable.WriteValue();
+                }
             }
         }
 
@@ -138,6 +187,12 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (variable.Name == "FileTransferLocation")
                 {
+                    if (!variable.Value.ToBoolean(null))
+                    {
+                        var path = GetFileLocationJobs();
+                        SetFileWatcher(path);
+                    }
+                    //_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                     SetFiles();
                 }
 
