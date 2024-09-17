@@ -6,12 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
+using System.Text;
+using System.Threading.Tasks;
 using BR.AN.PviServices;
 
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
+using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -54,6 +56,18 @@ namespace ControlWorks.Services.PVI.Variables
                         SetFiles();
                     });
                 }
+
+            }
+        }
+
+        private void WaitForDataTransfer()
+        {
+            var counter = 0;
+            Variable dataTransfer = _cpu.Variables[dataTransferVariable];
+            while (dataTransfer.IsConnected == false)
+            {
+                System.Threading.Tasks.Task.Delay(500);
+                counter++;
             }
         }
 
@@ -63,6 +77,12 @@ namespace ControlWorks.Services.PVI.Variables
 
             try
             {
+                var connected = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].IsConnected;
+                var fileTransferLocation =
+                    _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null);
+                Trace.TraceInformation($"FileTransferLocation={_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)}");
+                // true = USB false = Network
+                string directoryPath;
                 if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
                     Trace.TraceInformation("Switching file location to USB");
@@ -72,13 +92,15 @@ namespace ControlWorks.Services.PVI.Variables
                     {
                         if (d.DriveType == DriveType.Removable && d.IsReady)
                         {
+                            Trace.TraceInformation($"Reading from USB Drive {d.Name}");
+                            directoryPath = d.RootDirectory.FullName;
                             var files = d.RootDirectory.GetFiles();
                             {
                                 foreach (var fi in files)
                                 {
                                     if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
                                     {
-                                        list.Add(fi.FullName);
+                                        list.Add(fi.Name);
                                     }
                                 }
                             }
@@ -87,24 +109,31 @@ namespace ControlWorks.Services.PVI.Variables
                 }
                 else
                 {
-                    var directoryPath = GetFileLocationJobs();
+                    directoryPath = GetFileLocationJobs();
 
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
+                        var di = new DirectoryInfo(directoryPath);
                         var fileNames = Directory
-                            .EnumerateFiles(directoryPath)
-                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"));
+                            .GetFiles(directoryPath)
+                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"))
+                            .ToList();
 
                         Trace.TraceInformation("Switching file location to Network");
-                        list.AddRange(fileNames);
 
-                        SetFileWatcher(directoryPath);
+                        foreach (var fileName in fileNames)
+                        {
+                            var fi = new FileInfo(fileName);
+                            var name = fi.Name;
+                            list.Add(name);
+                        }
 
                     }
                     else
                     {
                         Trace.TraceError($"The directory path {directoryPath} is not found");
                     }
+                    SetFileWatcher(directoryPath);
                 }
             }
             catch (System.Exception e)
@@ -125,7 +154,7 @@ namespace ControlWorks.Services.PVI.Variables
                 return;
             }
 
-            if (!Directory.Exists(path))
+            if (!new DirectoryInfo(path).Exists)
             {
                 Trace.TraceError("SetFileWatcher: The directory path is not found");
                 return;
@@ -181,18 +210,71 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        private void PrintData(Variable printDataVariable)
+        {
+            try
+            {
+                if (printDataVariable == null || printDataVariable.Value == null)
+                {
+                    Trace.TraceError("PrintData Variable is null");
+                    return;
+                }
+
+                string customerOrderErp = "TestFile";
+                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("CustomerOrderErp"))
+                {
+                    customerOrderErp = _cpu.Tasks["DataTransf"].Variables["CustomerOrderErp"].Value;
+                }
+
+                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
+                {
+                    var filename = $"{customerOrderErp}_{DateTime.Now:yyyyMMddHHmmss}.csv";
+                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString();
+
+                    if (!Directory.Exists(location))
+                    {
+                        Directory.CreateDirectory(location);
+                    }
+                    
+                    if (Directory.Exists(location))
+                    {
+                        var data = printDataVariable
+                            .Value
+                            .ToString(CultureInfo.InvariantCulture)
+                            .Replace(";", ",");
+                        var path = Path.Combine(location, filename);
+                        File.WriteAllText(path, data);
+                        Trace.TraceInformation($"Print file sent to {path}");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Trace.TraceError(ex.Message);
+            }
+        }
+
         private void _eventNotifier_VariableValueChanged(object sender, PviApplicationEventArgs e)
         {
             if (sender is Variable variable)
             {
+                if (variable.Name == "SendToPrinter")
+                {
+                    if (variable.Value.ToBoolean(null) == true)
+                    {
+                        var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
+                        PrintData(printDataVariable);
+                        variable.Value.Assign(false);
+                        variable.WriteValue();
+                    }
+                }
+
+                if (variable.Name == "FileLocationJobs")
+                {
+                    SetFiles();
+                }
                 if (variable.Name == "FileTransferLocation")
                 {
-                    if (!variable.Value.ToBoolean(null))
-                    {
-                        var path = GetFileLocationJobs();
-                        SetFileWatcher(path);
-                    }
-                    //_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                     SetFiles();
                 }
 
@@ -203,6 +285,7 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "FileNameToLoad")
                 {
+                    WaitForDataTransfer();
                     FileNameToLoad();
                 }
 
@@ -439,6 +522,51 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        private string ToCsv(Variable printData)
+        {
+            var list = new List<string>();
+            foreach (Variable member in printData.Members)
+            {
+                list.Add(member["RunQuantity"].Value.ToString());
+                list.Add(member["DuctJob.Length_1"].Value.ToString());
+                list.Add(member["DuctJob.Length_2"].Value.ToString());
+                list.Add(member["DuctJob.Type"].Value.ToString());
+                list.Add(member["DuctJob.Bead"].Value.ToString());
+                list.Add(member["DuctJob.Damper"].Value.ToString());
+                list.Add(member["DuctJob.ConnTypeR"].Value.ToString());
+                list.Add(member["DuctJob.ConnTypeL"].Value.ToString());
+                list.Add(member["DuctJob.CleatMode"].Value.ToString());
+                list.Add(member["DuctJob.CleatType"].Value.ToString());
+                list.Add(member["DuctJob.LockType"].Value.ToString());
+                list.Add(member["DuctJob.SealantUsed"].Value.ToString());
+                list.Add(member["DuctJob.Brake"].Value.ToString());
+                list.Add(member["DuctJob.Insulation"].Value.ToString());
+                list.Add(member["DuctJob.PinSpacing"].Value.ToString());
+                list.Add(member["DuctJob.TieRodType_Leg_1"].Value.ToString());
+                list.Add(member["DuctJob.TieRodType_Leg_2"].Value.ToString());
+                list.Add(member["DuctJob.TieRodHoles_Leg_1"].Value.ToString());
+                list.Add(member["DuctJob.TieRodHoles_Leg_2"].Value.ToString());
+                list.Add(member["DuctJob.HoleSize"].Value.ToString());
+                list.Add(member["Basic.CoilGauge"].Value.ToString());
+                list.Add(member["Basic.CoilWidth"].Value.ToString());
+                list.Add(member["Basic.TotalLength"].Value.ToString());
+                list.Add(member["Basic.TotalLength"].Value.ToString());
+                list.Add(member["NeoPrintData"]["ReferenceERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["DeliveryYardERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["CustomerOrderERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["BarCode"].Value.ToString());
+                list.Add(member["NeoPrintData"]["PieceNumberERP"].Value.ToString());
+                list.Add(member["CustomerInfo"]["CustomerAddress"].Value.ToString());
+                list.Add(member["CustomerInfo"]["CustomerName"].Value.ToString());
+
+            }
+
+            var csv = String.Join(",", list);
+
+            return csv;
+        }
+
+
         private void ClearDataTransfer()
         {
             Variable dataTransfer = _cpu.Variables[dataTransferVariable];
@@ -483,14 +611,17 @@ namespace ControlWorks.Services.PVI.Variables
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
             ClearDataTransfer();
+            var directoryPath = GetFileLocationJobs();
+            var fi = new FileInfo(filePath);
+            var fullPath = Path.Combine(directoryPath, fi.Name);
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(fullPath))
             {
-                Trace.TraceError($"File {filePath} not found.");
-                throw new System.Exception($"File {filePath} not found.");
+                Trace.TraceError($"File {fullPath} not found.");
+                return;
             }
             var list = new List<bool>();
-            var lines = File.ReadAllLines(filePath);
+            var lines = File.ReadAllLines(fullPath);
             Variable dataTransfer = cpu.Variables[dataTransferVariable];
 
             for (int i = 0; i < lines.Length; i++)
