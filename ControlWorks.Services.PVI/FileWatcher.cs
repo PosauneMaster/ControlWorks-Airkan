@@ -1,55 +1,69 @@
-﻿using ControlWorks.Common;
-
-using System;
-using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Caching;
 using System.Threading;
 
 namespace ControlWorks.Services.PVI
 {
-    public class FileWatcher : IDisposable
+    public class FileWatcher
     {
-        private readonly FileSystemWatcher _watcher;
-        private readonly MemoryCache _memCache;
-        private readonly CacheItemPolicy _cacheItemPolicy;
-        private const int CacheTimeMilliseconds = 1000;
+        private readonly HashSet<string> _cache = new HashSet<string>();
+        private Timer _stateTimer;
+
 
         public event EventHandler<FileWatchEventArgs> FilesChanged;
-
         public string DirectoryPath { get; set; }
 
         public FileWatcher(string directory)
         {
-            if (!String.IsNullOrEmpty(directory) && Directory.Exists(directory))
+            DirectoryPath = directory;
+            InitializeCache();
+            Run();
+        }
+
+        private void InitializeCache()
+        {
+            _cache.Clear();
+            if (!String.IsNullOrEmpty(DirectoryPath) && Directory.Exists(DirectoryPath))
             {
-                _memCache = MemoryCache.Default;
-                _cacheItemPolicy = new CacheItemPolicy()
+                foreach (var file in Directory.GetFiles(DirectoryPath))
                 {
-                    RemovedCallback = OnRemovedFromCache
-                };
-
-                DirectoryPath = directory;
-                _watcher = new FileSystemWatcher(directory);
-
-                _watcher.NotifyFilter = NotifyFilters.Attributes
-                                        | NotifyFilters.CreationTime
-                                        | NotifyFilters.DirectoryName
-                                        | NotifyFilters.FileName
-                                        | NotifyFilters.LastAccess
-                                        | NotifyFilters.LastWrite
-                                        | NotifyFilters.Security
-                                        | NotifyFilters.Size;
-
-                _watcher.Changed += OnNetworkFilesChanged;
-                _watcher.Deleted += OnNetworkFilesChanged;
-                _watcher.Created += OnNetworkFilesChanged;
-                _watcher.Renamed += OnNetworkFilesChanged;
-
-                _watcher.Filter = "*.*";
-                _watcher.IncludeSubdirectories = true;
-                _watcher.EnableRaisingEvents = true;
+                    _cache.Add(file);
+                }
             }
+        }
+
+        public void Run()
+        {
+            _stateTimer = new Timer(CheckFiles,null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10));
+        }
+
+        private void CheckFiles(object state)
+        {
+            var files = Directory.GetFiles(DirectoryPath);
+            if (files.Length != _cache.Count)
+            {
+                OnFilesChanged(new FileWatchEventArgs() {Directory = DirectoryPath});
+            }
+            else if (!IsInCache())
+            {
+                OnFilesChanged(new FileWatchEventArgs() { Directory = DirectoryPath });
+            }
+
+            InitializeCache();
+        }
+
+        private bool IsInCache()
+        {
+            var files = Directory.GetFiles(DirectoryPath);
+            foreach (var file in files)
+            {
+                if (!_cache.Contains(file))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void OnFilesChanged(FileWatchEventArgs args)
@@ -59,35 +73,6 @@ namespace ControlWorks.Services.PVI
             {
                 temp(this, args);
             }
-        }
-
-        private void OnNetworkFilesChanged(object sender, FileSystemEventArgs e)
-        {
-            _cacheItemPolicy.AbsoluteExpiration =
-                DateTimeOffset.Now.AddMilliseconds(CacheTimeMilliseconds);
-
-            _memCache.AddOrGetExisting(ConfigurationProvider.AirkanNetworkFolder, ConfigurationProvider.AirkanNetworkFolder, _cacheItemPolicy);
-
-        }
-
-        private void OnRemovedFromCache(CacheEntryRemovedArguments args)
-        {
-            if (args.RemovedReason != CacheEntryRemovedReason.Expired)
-            {
-                return;
-            }
-
-            var e = args.CacheItem.Value.ToString();
-
-            Trace.TraceInformation($"File Watch Triggered for {e}");
-
-            OnFilesChanged(new FileWatchEventArgs() {Directory = ConfigurationProvider.AirkanNetworkFolder });
-        }
-
-        public void Dispose()
-        {
-            _watcher?.Dispose();
-            _memCache?.Dispose();
         }
     }
 

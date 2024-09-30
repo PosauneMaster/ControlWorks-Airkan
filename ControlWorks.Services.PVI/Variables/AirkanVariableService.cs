@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using System.Windows.Forms;
 using BR.AN.PviServices;
 
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
-using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -27,6 +28,7 @@ namespace ControlWorks.Services.PVI.Variables
         private readonly Cpu _cpu;
         private readonly ConcurrentDictionary<int, string> _inputFiles = new ConcurrentDictionary<int, string>();
         private readonly UsbMonitor _monitor;
+        private readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
         public AirkanVariableService(IEventNotifier eventNotifier, Cpu cpu)
         {
@@ -48,6 +50,10 @@ namespace ControlWorks.Services.PVI.Variables
         {
             if (sender is Variable v)
             {
+                if (v.Name == dataTransferVariable)
+                {
+                    _autoResetEvent.Set();
+                }
                 if (v.Name == "FileNames")
                 {
                     System.Threading.Tasks.Task.Run(async () =>
@@ -165,7 +171,6 @@ namespace ControlWorks.Services.PVI.Variables
                 return;
             }
 
-            _fileWatcher?.Dispose();
             _fileWatcher = new FileWatcher(path);
             _fileWatcher.FilesChanged += (sender, args) =>
             {
@@ -210,26 +215,105 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
-        private void PrintData(Variable printDataVariable)
+        private StringBuilder GetBartenderBtwHeader(StringBuilder sb)
         {
+            var bartenderHeader = ConfigurationManager.AppSettings["BartenderFileHeader"];
+            if (String.IsNullOrEmpty(bartenderHeader))
+            {
+                Trace.TraceError("Configuration BartenderFileHeader not found");
+                return null;
+            }
+            
+            var split = bartenderHeader.Split('|');
+
+            foreach (var line in split)
+            {
+                sb.AppendLine(line);
+            }
+
+            return sb;
+        }
+
+        private bool PrintData(Variable printDataVariable)
+        {
+            var headerList = new List<string>();
+            var headers = _cpu.Tasks["DataTransf"].Variables["PrinterHeaders"];
+
+            if (headers.Members == null)
+            {
+                Trace.TraceError("Unable to locate PrinterHeaders variable");
+                return false;
+            }
+
+            foreach (var member in headers.Members)
+            {
+                var memberVariable = member as Variable;
+                var value = memberVariable.Value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    headerList.Add("");
+                }
+                else
+                {
+                    headerList.Add(value);
+                }
+
+            }
+            var header = String.Join(";", headerList);
+
+            var list = new List<string>();
+
+            if (printDataVariable.Members == null)
+            {
+                Trace.TraceError("Unable to locate PrintData variable");
+                return false;
+            }
+
+            foreach (var member in printDataVariable.Members)
+            {
+                var memberVariable = member as Variable;
+                var value = memberVariable.Value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    list.Add("");
+                }
+                else
+                {
+                    list.Add(value);
+                }
+            }
+
+            var csv = String.Join(";", list);
+
+            var sb = new StringBuilder();
+            sb = GetBartenderBtwHeader(sb);
+            if (sb == null)
+            {
+                Trace.TraceError("Unable to process PrintData");
+                return false;
+            }
+
+            sb.AppendLine(header);
+            sb.AppendLine(csv);
+
             try
             {
                 if (printDataVariable == null || printDataVariable.Value == null)
                 {
                     Trace.TraceError("PrintData Variable is null");
-                    return;
+                    return false;
                 }
 
-                string customerOrderErp = "TestFile";
-                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("CustomerOrderErp"))
+                string customerOrderErp = "PrintFile";
+                if (_cpu.Tasks["DataTransf"].Variables["PrintData"].Members["CustomerOrderERP"] != null)
                 {
-                    customerOrderErp = _cpu.Tasks["DataTransf"].Variables["CustomerOrderErp"].Value;
+                    customerOrderErp = _cpu.Tasks["DataTransf"].Variables["PrintData"].Members["CustomerOrderERP"].Value.ToString(CultureInfo.InvariantCulture);
                 }
 
                 if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
                 {
                     var filename = $"{customerOrderErp}_{DateTime.Now:yyyyMMddHHmmss}.csv";
-                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString();
+                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
 
                     if (!Directory.Exists(location))
                     {
@@ -238,19 +322,18 @@ namespace ControlWorks.Services.PVI.Variables
                     
                     if (Directory.Exists(location))
                     {
-                        var data = printDataVariable
-                            .Value
-                            .ToString(CultureInfo.InvariantCulture)
-                            .Replace(";", ",");
                         var path = Path.Combine(location, filename);
-                        File.WriteAllText(path, data);
+                        File.WriteAllText(path, sb.ToString());
                         Trace.TraceInformation($"Print file sent to {path}");
                     }
                 }
+
+                return true;
             }
             catch (System.Exception ex)
             {
                 Trace.TraceError(ex.Message);
+                return false;
             }
         }
 
@@ -263,9 +346,13 @@ namespace ControlWorks.Services.PVI.Variables
                     if (variable.Value.ToBoolean(null) == true)
                     {
                         var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
-                        PrintData(printDataVariable);
-                        variable.Value.Assign(false);
-                        variable.WriteValue();
+                        
+                        var result = PrintData(printDataVariable);
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
                     }
                 }
 
@@ -280,16 +367,81 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    new BarTenderFileService().ProcessBarCode(_cpu, variable);
+                    var result = WriteToProductionDataDatabase();
+                    if (result)
+                    {
+                        variable.Value.Assign(false);
+                        variable.WriteValue();
+                    }
                 }
+                if (variable.Name == "SendOrderData")
+                {
+                    var result = WriteToOrderDataDatabase();
+                    if (result)
+                    {
+                        variable.Value.Assign(false);
+                        variable.WriteValue();
+                    }
+                }
+
 
                 if (variable.Name == "FileNameToLoad")
                 {
-                    WaitForDataTransfer();
-                    FileNameToLoad();
+                    System.Threading.Tasks.Task.Run(() =>
+                    {
+                        _autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(2000));
+                        FileNameToLoad();
+                    });
+
                 }
 
             }
+        }
+
+        private bool WriteToOrderDataDatabase()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("OrderData"))
+            {
+                var orderDataVariable = _cpu.Tasks["DataTransf"].Variables["OrderData"];
+                if (!orderDataVariable.IsConnected)
+                {
+                    return true;
+                }
+
+                var service = new DatabaseService();
+                return service.WriteToOrderData(orderDataVariable);
+
+            }
+
+            return true;
+
+        }
+
+
+        private bool WriteToProductionDataDatabase()
+        {
+            var listProductionData = new List<string>();
+
+
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("ProductionData"))
+            {
+                var productionData = _cpu.Tasks["DataTransf"].Variables["ProductionData"];
+                if (!productionData.IsConnected)
+                {
+                    return true;
+                }
+
+                foreach (Variable member in productionData.Members)
+                {
+                    // [dbo].[LF2024_PRODUCTION](
+                    listProductionData.Add(member.Value.ToString(CultureInfo.InvariantCulture));
+                }
+
+            }
+
+
+
+            return true;
         }
 
         public void FileNameToLoad()
@@ -304,7 +456,6 @@ namespace ControlWorks.Services.PVI.Variables
                     ProcessInputFile(path, _cpu);
                 }
             }
-
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
@@ -571,6 +722,11 @@ namespace ControlWorks.Services.PVI.Variables
         {
             Variable dataTransfer = _cpu.Variables[dataTransferVariable];
 
+            if (dataTransfer.Members == null)
+            {
+                return;
+            }
+
             foreach (Variable member in dataTransfer.Members)
             {
                 member["RunQuantity"].Value = 0;
@@ -623,6 +779,11 @@ namespace ControlWorks.Services.PVI.Variables
             var list = new List<bool>();
             var lines = File.ReadAllLines(fullPath);
             Variable dataTransfer = cpu.Variables[dataTransferVariable];
+
+            if (dataTransfer.Members == null)
+            {
+                return;
+            }
 
             for (int i = 0; i < lines.Length; i++)
             {
