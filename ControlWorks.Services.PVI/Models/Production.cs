@@ -11,6 +11,7 @@ namespace ControlWorks.Services.PVI.Models
         private string _billtoName;
         private string _yourReference;
         private string _entryNo;
+        private string _jobName;
         private string _qty;
         private string _sizeA;
         private string _sizeB;
@@ -21,139 +22,130 @@ namespace ControlWorks.Services.PVI.Models
         private string _misc2;
         private string _misc3;
 
+        private string CheckLength(string value)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+            {
+                return String.Empty;
+            }
+            if (value.Length > 50)
+            {
+                return value.Substring(0, 49);
+            }
+            return value;
+        }
+
         public string DateTime
         {
             get => _dateTime;
             set =>
-                _dateTime = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _dateTime = CheckLength(value);
         }
 
         public string CustomerOrder
         {
             get => _customerOrder;
             set =>
-                _customerOrder = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _customerOrder = CheckLength(value);
         }
 
         public string ShiptoName
         {
             get => _shiptoName;
             set =>
-                _shiptoName = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _shiptoName = CheckLength(value);
         }
 
         public string BilltoName
         {
             get => _billtoName;
             set =>
-                _billtoName = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _billtoName = CheckLength(value);
         }
 
         public string YourReference
         {
             get => _yourReference;
             set =>
-                _yourReference = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _yourReference = CheckLength(value);
         }
 
         public string EntryNo
         {
             get => _entryNo;
             set =>
-                _entryNo = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _entryNo = CheckLength(value);
         }
+
+        public string JobName
+        {
+            get => _jobName;
+            set =>
+                _jobName = CheckLength(value);
+        }
+
 
         public string Qty
         {
             get => _qty;
             set =>
-                _qty = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _qty = CheckLength(value);
         }
 
         public string SizeA
         {
             get => _sizeA;
             set =>
-                _sizeA = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _sizeA = CheckLength(value);
         }
 
         public string SizeB
         {
             get => _sizeB;
             set =>
-                _sizeB = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _sizeB = CheckLength(value);
         }
 
         public string CoilNumber
         {
             get => _coilNumber;
             set =>
-                _coilNumber = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _coilNumber = CheckLength(value);
         }
 
         public string CoilGauge
         {
             get => _coilGauge;
             set =>
-                _coilGauge = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _coilGauge = CheckLength(value);
         }
 
         public string CoilWidth
         {
             get => _coilWidth;
             set =>
-                _coilWidth = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _coilWidth = CheckLength(value);
         }
 
         public string Misc1
         {
             get => _misc1;
             set =>
-                _misc1 = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _misc1 = CheckLength(value);
         }
 
         public string Misc2
         {
             get => _misc2;
             set =>
-                _misc2 = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _misc2 = CheckLength(value);
         }
 
         public string Misc3
         {
             get => _misc3;
             set =>
-                _misc3 = String.IsNullOrWhiteSpace(value)
-                    ? String.Empty
-                    : value.Substring(0, 49);
+                _misc3 = CheckLength(value);
         }
     }
 }

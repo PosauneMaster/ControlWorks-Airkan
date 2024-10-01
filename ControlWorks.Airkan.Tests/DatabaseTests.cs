@@ -42,5 +42,31 @@ namespace ControlWorks.Airkan.Tests
             dbService.WriteToOrderDataDatabase(orderData);
         }
 
+        [Test]
+        public void WriteToProductionData_Test()
+        {
+            var productionData = new Production
+            {
+                DateTime = "DateTime",
+                CustomerOrder = "CustomerOrder",
+                ShiptoName = "ShipToName",
+                BilltoName = "BilltoName",
+                YourReference = "YourReference",
+                EntryNo = "EntryNo",
+                JobName = "JobName",
+                Qty = "Qty",
+                SizeA = "SizeA",
+                SizeB = "SizeB",
+                CoilNumber = "CoilNumber",
+                CoilGauge = "CoilGauge",
+                CoilWidth = "CoilWidth",
+                Misc1 = "Misc1",
+                Misc2 = "Misc2",
+                Misc3 = "Misc3",
+            };
+
+            var dbService = new DatabaseService();
+            dbService.WriteProductionToDatabase(productionData);
+        }
     }
 }
