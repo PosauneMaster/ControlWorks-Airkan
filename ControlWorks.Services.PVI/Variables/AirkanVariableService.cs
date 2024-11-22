@@ -367,20 +367,28 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    var result = WriteToProductionDataDatabase();
-                    if (result)
+                    if (variable.Value == true)
                     {
-                        variable.Value.Assign(false);
-                        variable.WriteValue();
+                        Trace.TraceInformation("Product Finished received as true");
+
+                        var result = WriteToProductionDataDatabase();
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
                     }
                 }
                 if (variable.Name == "SendOrderData")
                 {
-                    var result = WriteToOrderDataDatabase();
-                    if (result)
+                    if (variable.Value == true)
                     {
-                        variable.Value.Assign(false);
-                        variable.WriteValue();
+                        var result = WriteToOrderDataDatabase();
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
                     }
                 }
 
@@ -408,6 +416,7 @@ namespace ControlWorks.Services.PVI.Variables
                     return true;
                 }
 
+                Trace.TraceInformation("Write Order Data to Database");
                 var service = new DatabaseService();
                 return service.WriteToOrderData(orderDataVariable);
 
@@ -420,26 +429,22 @@ namespace ControlWorks.Services.PVI.Variables
 
         private bool WriteToProductionDataDatabase()
         {
-            var listProductionData = new List<string>();
-
 
             if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("ProductionData"))
             {
                 var productionData = _cpu.Tasks["DataTransf"].Variables["ProductionData"];
                 if (!productionData.IsConnected)
                 {
+                    Trace.TraceInformation("ProductionData variable is not connected");
                     return true;
                 }
 
-                foreach (Variable member in productionData.Members)
-                {
-                    // [dbo].[LF2024_PRODUCTION](
-                    listProductionData.Add(member.Value.ToString(CultureInfo.InvariantCulture));
-                }
-
+                Trace.TraceInformation("Write Production Data to database");
+                var service = new DatabaseService();
+                return service.WriteToProductionData(productionData);
             }
 
-
+            Trace.TraceInformation("ProductionData variable is not found");
 
             return true;
         }

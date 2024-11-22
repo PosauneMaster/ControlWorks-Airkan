@@ -6,6 +6,8 @@
     &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.Select_LF2024_ORDERS_Test&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.WriteToOrderData_Test&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.WriteToProductionData_Test&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.OrdersConnectionString_Test&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::D093FFCA-4511-4BFB-94EE-2CDE2FBBCD8C::.NETFramework,Version=v4.8::ControlWorks.Airkan.Tests.DatabaseTests.OrdersConnectionString_IntegratedSecurity_False_Test&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Airkan/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using ControlWorks.Common;
 using ControlWorks.Services.PVI;
 using ControlWorks.Services.PVI.Database;
 using ControlWorks.Services.PVI.Models;
@@ -68,5 +69,20 @@ namespace ControlWorks.Airkan.Tests
             var dbService = new DatabaseService();
             dbService.WriteProductionToDatabase(productionData);
         }
+
+        [Test]
+        public void OrdersConnectionString_IntegratedSecurity_True_Test()
+        {
+            var sqlConnectionService = new SqlConnectionService();
+            var ordersConnectionString = sqlConnectionService.OrdersConnectionString();
+        }
+
+        [Test]
+        public void OrdersConnectionString_IntegratedSecurity_False_Test()
+        {
+            var sqlConnectionService = new SqlConnectionService();
+            var ordersConnectionString = sqlConnectionService.OrdersConnectionString();
+        }
+
     }
 }

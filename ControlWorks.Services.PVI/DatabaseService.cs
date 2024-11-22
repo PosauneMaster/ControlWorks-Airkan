@@ -1,15 +1,14 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Text;
 
 using BR.AN.PviServices;
 
 using ControlWorks.Common;
 using ControlWorks.Services.PVI.Models;
-using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI
 {
@@ -24,6 +23,14 @@ namespace ControlWorks.Services.PVI
     }
     public class DatabaseService
     {
+        private readonly SqlConnectionService _sqlConnectionService;
+
+        public DatabaseService()
+        {
+            _sqlConnectionService = new SqlConnectionService();
+        }
+
+
         public bool WriteToProductionData(Variable productionVariable)
         {
             var productionData = new Production
@@ -54,7 +61,7 @@ namespace ControlWorks.Services.PVI
             try
             {
                 var sbSql = new StringBuilder();
-                sbSql.AppendLine("INSERT INTO [dbo].[LF2024_PRODUCTION]");
+                sbSql.AppendLine($"INSERT INTO [dbo].[{_sqlConnectionService.ProductionTableName}]");
                 sbSql.AppendLine("([DateTime],[CustomerOrder],[ShiptoName],[BilltoName],[YourReference],[EntryNo],[JobName],");
                 sbSql.AppendLine("[Qty],[SizeA],[SizeB],[CoilNumber],[CoilGauge],[CoilWidth],[Misc1],[Misc2],[Misc3])");
                 sbSql.AppendLine("VALUES");
@@ -62,7 +69,7 @@ namespace ControlWorks.Services.PVI
                 sbSql.AppendLine("@CoilNumber,@CoilGauge,@CoilWidth,@Misc1,@Misc2,@Misc3)");
 
 
-                using (var connection = new SqlConnection(ConfigurationProvider.AirkanConnectionString))
+                using (var connection = new SqlConnection(_sqlConnectionService.ProductionConnectionString()))
                 {
                     connection.Open();
                     using (var command = connection.CreateCommand())
@@ -77,7 +84,7 @@ namespace ControlWorks.Services.PVI
                         command.Parameters.AddWithValue("Qty", productionData.Qty);
                         command.Parameters.AddWithValue("SizeA", productionData.SizeA);
                         command.Parameters.AddWithValue("SizeB", productionData.SizeB);
-                        command.Parameters.AddWithValue("CoilNumber", productionData.CoilGauge);
+                        command.Parameters.AddWithValue("CoilNumber", productionData.CoilNumber);
                         command.Parameters.AddWithValue("CoilGauge", productionData.CoilGauge);
                         command.Parameters.AddWithValue("CoilWidth", productionData.CoilWidth);
                         command.Parameters.AddWithValue("Misc1", productionData.Misc1);
@@ -95,6 +102,7 @@ namespace ControlWorks.Services.PVI
             }
             catch (System.Exception ex)
             {
+                File.AppendAllText(@"C:\ControlWorks\SqlError.txt", ex.ToString());
                 Trace.TraceError($"DatabaseService.WriteToOrderDataDatabase: {ex.Message}\r\n{ex}");
                 return false;
             }
@@ -123,12 +131,12 @@ namespace ControlWorks.Services.PVI
             try
             {
                 var sbSql = new StringBuilder();
-                sbSql.AppendLine("INSERT INTO [dbo].[LF2024_ORDERS]");
+                sbSql.AppendLine($"INSERT INTO [dbo].[{_sqlConnectionService.OrdersTableName}]");
                 sbSql.AppendLine("([CustomerOrder],[Status],[DateTime],[Misc1],[Misc2],[Misc3],[Misc4],[Misc5])");
                 sbSql.AppendLine("VALUES");
                 sbSql.AppendLine("(@CustomerOrder, @Status, @DateTime, @Misc1, @Misc2, @Misc3, @Misc4, @Misc5)");
 
-                using (var connection = new SqlConnection(ConfigurationProvider.AirkanConnectionString))
+                using (var connection = new SqlConnection(_sqlConnectionService.OrdersConnectionString()))
                 {
                     connection.Open();
                     using (var command = connection.CreateCommand())

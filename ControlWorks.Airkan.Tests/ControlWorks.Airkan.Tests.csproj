@@ -70,6 +70,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ControlWorks.Common\ControlWorks.Common.csproj">
+      <Project>{9720EB0F-048C-4444-ACE4-110CDCC89CC1}</Project>
+      <Name>ControlWorks.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ControlWorks.Services.PVI\ControlWorks.Services.PVI.csproj">
       <Project>{7d3392aa-92e4-4e0e-ac9c-7bc478c4bf5e}</Project>
       <Name>ControlWorks.Services.PVI</Name>

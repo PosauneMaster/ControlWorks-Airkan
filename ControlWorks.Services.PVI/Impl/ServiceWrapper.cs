@@ -1,9 +1,11 @@
 ﻿using BR.AN.PviServices;
 
+using ControlWorks.Common.Logging;
 using ControlWorks.Services.PVI.Panel;
 using ControlWorks.Services.PVI.Variables;
 
 using System;
+using System.Diagnostics;
 
 namespace ControlWorks.Services.PVI.Impl
 {
@@ -36,6 +38,7 @@ namespace ControlWorks.Services.PVI.Impl
 
         public void ConnectPviService()
         {
+
             _connectionTime = DateTime.Now;
             _service = new Service(Guid.NewGuid().ToString());
 
