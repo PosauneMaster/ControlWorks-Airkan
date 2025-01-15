@@ -9,6 +9,7 @@ using ControlWorks.Services.PVI.Variables;
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
 using System.Diagnostics;
 using System.IO;
@@ -300,9 +301,23 @@ namespace ControlWorks.Services.PVI.Pvi
 
         #endregion
 
-
+        private object _syncLock = new object();
         private void _eventNotifier_PviServiceError(object sender, PviApplicationEventArgs e)
         {
+            lock (_syncLock)
+            {
+                if (sender is Service service)
+                {
+                    if (service.IsConnected == false)
+                    {
+                        while (service.IsConnected == false)
+                        {
+                            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(5));
+                        }
+                        _serviceWrapper.ReConnectPviService();
+                    }
+                }
+            }
         }
 
         private void _eventNotifier_PviServiceDisconnected(object sender, PviApplicationEventArgs e)
@@ -366,8 +381,7 @@ namespace ControlWorks.Services.PVI.Pvi
                 {
                     if (variable.Parent.Parent is Cpu cpu)
                     {
-                        var heartBeatService = new HeartBeatService();
-                        System.Threading.Tasks.Task.Run(() => heartBeatService.Run(variable));
+                        System.Threading.Tasks.Task.Run(() => HeartBeatService.Run(variable));
                     }
                 }
             }
@@ -383,6 +397,11 @@ namespace ControlWorks.Services.PVI.Pvi
 
         private void _eventNotifier_CpuDisconnected(object sender, PviApplicationEventArgs e)
         {
+            Cpu cpu = sender as Cpu;
+            if (cpu != null)
+            {
+                Trace.TraceInformation($"Cpu {cpu.Name} disconnected");
+            }
         }
 
         private void _eventNotifier_CpuConnected(object sender, CpuConnectionArgs e)

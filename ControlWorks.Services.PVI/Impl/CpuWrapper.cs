@@ -2,6 +2,7 @@
 using ControlWorks.Services.PVI.Panel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using ControlWorks.Common;
 
@@ -79,26 +80,39 @@ namespace ControlWorks.Services.PVI.Impl
 
         private void Connect(CpuInfo cpuInfo)
         {
-            var cpu = new Cpu(_service, cpuInfo.Name);
-
-            if (ConfigurationProvider.CpuConnectionDeviceType.Equals("TcpIp", StringComparison.OrdinalIgnoreCase))
-            {  // Visual Studio Mode
-                cpu.Connection.DeviceType = DeviceType.TcpIp;
-                cpu.Connection.TcpIp.SourceStation = ConfigurationProvider.SourceStationId;
-                cpu.Connection.TcpIp.DestinationIpAddress = cpuInfo.IpAddress;
-            }
-            else if (ConfigurationProvider.CpuConnectionDeviceType.Equals("ANSL", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                // Panel Mode
-                cpu.Connection.DeviceType = DeviceType.ANSLTcp;
-                cpu.Connection.ANSLTcp.DestinationIpAddress = cpuInfo.IpAddress;
+                if (!_service.Cpus.ContainsKey(cpuInfo.Name))
+                {
+                    var cpu = new Cpu(_service, cpuInfo.Name);
+
+                    if (ConfigurationProvider.CpuConnectionDeviceType.Equals("TcpIp",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Visual Studio Mode
+                        cpu.Connection.DeviceType = DeviceType.TcpIp;
+                        cpu.Connection.TcpIp.SourceStation = ConfigurationProvider.SourceStationId;
+                        cpu.Connection.TcpIp.DestinationIpAddress = cpuInfo.IpAddress;
+                    }
+                    else if (ConfigurationProvider.CpuConnectionDeviceType.Equals("ANSL",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Panel Mode
+                        cpu.Connection.DeviceType = DeviceType.ANSLTcp;
+                        cpu.Connection.ANSLTcp.DestinationIpAddress = cpuInfo.IpAddress;
+                    }
+
+                    cpu.Connected += Cpu_Connected;
+                    cpu.Error += Cpu_Error;
+                    cpu.Disconnected += Cpu_Disconnected;
+
+                    cpu.Connect();
+                }
             }
-
-            cpu.Connected += Cpu_Connected;
-            cpu.Error += Cpu_Error;
-            cpu.Disconnected += Cpu_Disconnected;
-
-            cpu.Connect();
+            catch (System.Exception e)
+            {
+                Trace.TraceError(e.Message);
+            }
         }
 
         public void CreateCpu(CpuInfo cpuInfo)

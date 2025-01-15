@@ -191,27 +191,34 @@ namespace ControlWorks.Services.PVI.Variables
 
         private void SetFiles()
         {
-            lock (SyncLock)
+            try
             {
-                _inputFiles.Clear();
-                var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
-
-                if (fileNamesVariable.IsConnected)
+                lock (SyncLock)
                 {
-                    for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
-                    {
-                        fileNamesVariable.Value[i].Assign(String.Empty);
-                    }
+                    _inputFiles.Clear();
+                    var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
 
-                    var files = GetFiles();
-                    for (int i = 0; i < files.Count; i++)
+                    if (fileNamesVariable.IsConnected)
                     {
-                        _inputFiles.TryAdd(i, files[i]);
-                        fileNamesVariable.Value[i].Assign(files[i]);
-                    }
+                        for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
+                        {
+                            fileNamesVariable.Value[i].Assign(String.Empty);
+                        }
 
-                    fileNamesVariable.WriteValue();
+                        var files = GetFiles();
+                        for (int i = 0; i < files.Count; i++)
+                        {
+                            _inputFiles.TryAdd(i, files[i]);
+                            fileNamesVariable.Value[i].Assign(files[i]);
+                        }
+
+                        fileNamesVariable.WriteValue();
+                    }
                 }
+            }
+            catch (System.Exception e)
+            {
+                Trace.TraceError(e.Message);
             }
         }
 
