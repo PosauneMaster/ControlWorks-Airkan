@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 using BR.AN.PviServices;
 
-using ControlWorks.Common;
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
@@ -22,26 +24,36 @@ namespace ControlWorks.Services.PVI.Variables
 
         private static readonly object SyncLock = new object();
         private readonly IEventNotifier _eventNotifier;
-        private readonly FileWatcher _fileWatcher;
+        private FileWatcher _fileWatcher;
         private readonly Cpu _cpu;
         private readonly ConcurrentDictionary<int, string> _inputFiles = new ConcurrentDictionary<int, string>();
+        private readonly UsbMonitor _monitor;
+        private readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
         public AirkanVariableService(IEventNotifier eventNotifier, Cpu cpu)
         {
             _cpu = cpu;
-            _fileWatcher = new FileWatcher();
-            _fileWatcher.FilesChanged += _fileWatcher_FilesChanged;
 
             _eventNotifier = eventNotifier;
             _eventNotifier.VariableValueChanged += _eventNotifier_VariableValueChanged;
             _eventNotifier.VariableConnected += _eventNotifier_VariableConnected;
 
-       }
+            _monitor = new UsbMonitor();
+            _monitor.DriveChanged += (sender, args) =>
+            {
+                SetFiles();
+            };
+            System.Threading.Tasks.Task.Run(() => _monitor.Run());
+        }
 
         private void _eventNotifier_VariableConnected(object sender, PviApplicationEventArgs e)
         {
             if (sender is Variable v)
             {
+                if (v.Name == dataTransferVariable)
+                {
+                    _autoResetEvent.Set();
+                }
                 if (v.Name == "FileNames")
                 {
                     System.Threading.Tasks.Task.Run(async () =>
@@ -50,85 +62,285 @@ namespace ControlWorks.Services.PVI.Variables
                         SetFiles();
                     });
                 }
+
             }
         }
 
-        private void _fileWatcher_FilesChanged(object sender, FileWatchEventArgs e)
+        private void WaitForDataTransfer()
         {
-            SetFiles();
+            var counter = 0;
+            Variable dataTransfer = _cpu.Variables[dataTransferVariable];
+            while (dataTransfer.IsConnected == false)
+            {
+                System.Threading.Tasks.Task.Delay(500);
+                counter++;
+            }
         }
 
         private List<string> GetFiles()
         {
-            lock (SyncLock)
+            var list = new List<string>();
+
+            try
             {
-                var list = new List<string>();
-
-                try
+                var connected = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].IsConnected;
+                var fileTransferLocation =
+                    _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null);
+                Trace.TraceInformation($"FileTransferLocation={_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)}");
+                // true = USB false = Network
+                string directoryPath;
+                if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
-                    if (_cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null))
-                    {
-                        Trace.TraceInformation("Switching file location to USB");
-                        DriveInfo[] allDrives = DriveInfo.GetDrives();
+                    Trace.TraceInformation("Switching file location to USB");
+                    DriveInfo[] allDrives = DriveInfo.GetDrives();
 
-                        foreach (DriveInfo d in allDrives)
+                    foreach (DriveInfo d in allDrives)
+                    {
+                        if (d.DriveType == DriveType.Removable && d.IsReady)
                         {
-                            if (d.DriveType == DriveType.Removable && d.IsReady)
+                            Trace.TraceInformation($"Reading from USB Drive {d.Name}");
+                            directoryPath = d.RootDirectory.FullName;
+                            var files = d.RootDirectory.GetFiles();
                             {
-                                var files = d.RootDirectory.GetFiles();
+                                foreach (var fi in files)
                                 {
-                                    foreach (var fi in files)
+                                    if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
                                     {
-                                        if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
-                                        {
-                                            list.Add(fi.FullName);
-                                        }
+                                        list.Add(fi.Name);
                                     }
                                 }
                             }
                         }
                     }
-                    else
+                }
+                else
+                {
+                    directoryPath = GetFileLocationJobs();
+
+                    if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
+                        var di = new DirectoryInfo(directoryPath);
                         var fileNames = Directory
-                            .EnumerateFiles(ConfigurationProvider.AirkanNetworkFolder)
-                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"));
+                            .GetFiles(directoryPath)
+                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"))
+                            .ToList();
 
                         Trace.TraceInformation("Switching file location to Network");
-                        list.AddRange(fileNames);
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    Trace.TraceError(
-                        $"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}",
-                        e);
-                }
 
-                return list;
+                        foreach (var fileName in fileNames)
+                        {
+                            var fi = new FileInfo(fileName);
+                            var name = fi.Name;
+                            list.Add(name);
+                        }
+
+                    }
+                    else
+                    {
+                        Trace.TraceError($"The directory path {directoryPath} is not found");
+                    }
+                    SetFileWatcher(directoryPath);
+                }
             }
+            catch (System.Exception e)
+            {
+                Trace.TraceError(
+                    $"{GetType().Name}.{MethodBase.GetCurrentMethod()?.Name}: Error loading files\r\n{e.Message}",
+                    e);
+            }
+
+            return list;
+        }
+
+        private void SetFileWatcher(string path)
+        {
+            if (String.IsNullOrWhiteSpace(path))
+            {
+                Trace.TraceError("SetFileWatcher: The directory path is empty");
+                return;
+            }
+
+            if (!new DirectoryInfo(path).Exists)
+            {
+                Trace.TraceError("SetFileWatcher: The directory path is not found");
+                return;
+            }
+
+            if (_fileWatcher != null && _fileWatcher.DirectoryPath.Equals(path))
+            {
+                return;
+            }
+
+            _fileWatcher = new FileWatcher(path);
+            _fileWatcher.FilesChanged += (sender, args) =>
+            {
+                SetFiles();
+            };
+        }
+
+        private string GetFileLocationJobs()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+            {
+                return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return String.Empty;
+
         }
 
         private void SetFiles()
         {
-            _inputFiles.Clear();
-            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
-
-            if (fileNamesVariable.IsConnected)
+            try
             {
-                for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
+                lock (SyncLock)
                 {
-                    fileNamesVariable.Value[i].Assign(String.Empty);
+                    _inputFiles.Clear();
+                    var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
+
+                    if (fileNamesVariable.IsConnected)
+                    {
+                        for (int i = 0; i < fileNamesVariable.Value.ArrayLength; i++)
+                        {
+                            fileNamesVariable.Value[i].Assign(String.Empty);
+                        }
+
+                        var files = GetFiles();
+                        for (int i = 0; i < files.Count; i++)
+                        {
+                            _inputFiles.TryAdd(i, files[i]);
+                            fileNamesVariable.Value[i].Assign(files[i]);
+                        }
+
+                        fileNamesVariable.WriteValue();
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Trace.TraceError(e.Message);
+            }
+        }
+
+        private StringBuilder GetBartenderBtwHeader(StringBuilder sb)
+        {
+            var bartenderHeader = ConfigurationManager.AppSettings["BartenderFileHeader"];
+            if (String.IsNullOrEmpty(bartenderHeader))
+            {
+                Trace.TraceError("Configuration BartenderFileHeader not found");
+                return null;
+            }
+            
+            var split = bartenderHeader.Split('|');
+
+            foreach (var line in split)
+            {
+                sb.AppendLine(line);
+            }
+
+            return sb;
+        }
+
+        private bool PrintData(Variable printDataVariable)
+        {
+            var headerList = new List<string>();
+            var headers = _cpu.Tasks["DataTransf"].Variables["PrinterHeaders"];
+
+            if (headers.Members == null)
+            {
+                Trace.TraceError("Unable to locate PrinterHeaders variable");
+                return false;
+            }
+
+            foreach (var member in headers.Members)
+            {
+                var memberVariable = member as Variable;
+                var value = memberVariable.Value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    headerList.Add("");
+                }
+                else
+                {
+                    headerList.Add(value);
                 }
 
-                var files = GetFiles();
-                for (int i = 0; i < files.Count; i++)
+            }
+            var header = String.Join(";", headerList);
+
+            var list = new List<string>();
+
+            if (printDataVariable.Members == null)
+            {
+                Trace.TraceError("Unable to locate PrintData variable");
+                return false;
+            }
+
+            foreach (var member in printDataVariable.Members)
+            {
+                var memberVariable = member as Variable;
+                var value = memberVariable.Value;
+                if (string.IsNullOrEmpty(value))
                 {
-                    _inputFiles.TryAdd(i, files[i]);
-                    fileNamesVariable.Value[i].Assign(files[i]);
+                    list.Add("");
+                }
+                else
+                {
+                    list.Add(value);
+                }
+            }
+
+            var csv = String.Join(";", list);
+
+            var sb = new StringBuilder();
+            sb = GetBartenderBtwHeader(sb);
+            if (sb == null)
+            {
+                Trace.TraceError("Unable to process PrintData");
+                return false;
+            }
+
+            sb.AppendLine(header);
+            sb.AppendLine(csv);
+
+            try
+            {
+                if (printDataVariable == null || printDataVariable.Value == null)
+                {
+                    Trace.TraceError("PrintData Variable is null");
+                    return false;
                 }
 
-                fileNamesVariable.WriteValue();
+                string customerOrderErp = "PrintFile";
+                if (_cpu.Tasks["DataTransf"].Variables["PrintData"].Members["CustomerOrderERP"] != null)
+                {
+                    customerOrderErp = _cpu.Tasks["DataTransf"].Variables["PrintData"].Members["CustomerOrderERP"].Value.ToString(CultureInfo.InvariantCulture);
+                }
+
+                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
+                {
+                    var filename = $"{customerOrderErp}_{DateTime.Now:yyyyMMddHHmmss}.csv";
+                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+
+                    if (!Directory.Exists(location))
+                    {
+                        Directory.CreateDirectory(location);
+                    }
+                    
+                    if (Directory.Exists(location))
+                    {
+                        var path = Path.Combine(location, filename);
+                        File.WriteAllText(path, sb.ToString());
+                        Trace.TraceInformation($"Print file sent to {path}");
+                    }
+                }
+
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Trace.TraceError(ex.Message);
+                return false;
             }
         }
 
@@ -136,6 +348,25 @@ namespace ControlWorks.Services.PVI.Variables
         {
             if (sender is Variable variable)
             {
+                if (variable.Name == "SendToPrinter")
+                {
+                    if (variable.Value.ToBoolean(null) == true)
+                    {
+                        var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
+                        
+                        var result = PrintData(printDataVariable);
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
+                    }
+                }
+
+                if (variable.Name == "FileLocationJobs")
+                {
+                    SetFiles();
+                }
                 if (variable.Name == "FileTransferLocation")
                 {
                     SetFiles();
@@ -143,32 +374,105 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    new BarTenderFileService().ProcessBarCode(_cpu, variable);
+                    if (variable.Value == true)
+                    {
+                        Trace.TraceInformation("Product Finished received as true");
+
+                        var result = WriteToProductionDataDatabase();
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
+                    }
                 }
+                if (variable.Name == "SendOrderData")
+                {
+                    if (variable.Value == true)
+                    {
+                        var result = WriteToOrderDataDatabase();
+                        if (result)
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
+                    }
+                }
+
 
                 if (variable.Name == "FileNameToLoad")
                 {
-                    FileNameToLoad();
+                    System.Threading.Tasks.Task.Run(() =>
+                    {
+                        _autoResetEvent.WaitOne(TimeSpan.FromMilliseconds(2000));
+                        FileNameToLoad();
+                    });
+
                 }
 
             }
+        }
+
+        private bool WriteToOrderDataDatabase()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("OrderData"))
+            {
+                var orderDataVariable = _cpu.Tasks["DataTransf"].Variables["OrderData"];
+                if (!orderDataVariable.IsConnected)
+                {
+                    return true;
+                }
+
+                Trace.TraceInformation("Write Order Data to Database");
+                var service = new DatabaseService();
+                return service.WriteToOrderData(orderDataVariable);
+
+            }
+
+            return true;
+
+        }
+
+
+        private bool WriteToProductionDataDatabase()
+        {
+
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("ProductionData"))
+            {
+                var productionData = _cpu.Tasks["DataTransf"].Variables["ProductionData"];
+                if (!productionData.IsConnected)
+                {
+                    Trace.TraceInformation("ProductionData variable is not connected");
+                    return true;
+                }
+
+                Trace.TraceInformation("Write Production Data to database");
+                var service = new DatabaseService();
+                return service.WriteToProductionData(productionData);
+            }
+
+            Trace.TraceInformation("ProductionData variable is not found");
+
+            return true;
         }
 
         public void FileNameToLoad()
         {
-            var sendToDisplayVariable = _cpu.Tasks["DataTrans1"].Variables["FileNameToLoad"];
-            var index = sendToDisplayVariable.Value.ToInt32(null);
-            if (_inputFiles.TryGetValue(index, out var path))
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileNameToLoad"))
             {
-                Trace.TraceInformation($"Processing Index {index} {path}");
-                ProcessInputFile(path, _cpu);
+                var sendToDisplayVariable = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
+                var index = sendToDisplayVariable.Value.ToInt32(null);
+                if (_inputFiles.TryGetValue(index, out var path))
+                {
+                    Trace.TraceInformation($"Processing Index {index} {path}");
+                    ProcessInputFile(path, _cpu);
+                }
             }
-
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
         {
-            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+            var dataTransferCompletedParts = _cpu.Tasks["DataTransf"].Variables["DataTransferCompletedParts"];
 
             lock (SyncLock)
             {
@@ -200,14 +504,14 @@ namespace ControlWorks.Services.PVI.Variables
 
         private void ProcessBarcodeFromFile(string filePath, Cpu cpu)
         {
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].Value.Assign(false);
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].Value.Assign(false);
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].WriteValue();
 
             var json = File.ReadAllText(filePath);
             var bartender = JsonConvert.DeserializeObject<BarTenderFileService>(json);
 
 
-            var dataTransferCompletedParts = _cpu.Tasks["DataTrans1"].Variables["DataTransferCompletedParts"];
+            var dataTransferCompletedParts = _cpu.Tasks["DataTransf"].Variables["DataTransferCompletedParts"];
 
             dataTransferCompletedParts["FileName"].AssignChecked(bartender.BtwFileName);
             dataTransferCompletedParts["NeoPrintData.CustomerOrderERP"].AssignChecked(bartender.Ordernummer);
@@ -224,35 +528,35 @@ namespace ControlWorks.Services.PVI.Variables
             dataTransferCompletedParts["Basic.CoilGauge"].AssignChecked(bartender.Dikte);
             dataTransferCompletedParts.WriteValue();
 
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].AssignChecked(true);
-            _cpu.Tasks["DataTrans1"].Variables["ProductFinished"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].AssignChecked(true);
+            _cpu.Tasks["DataTransf"].Variables["ProductFinished"].WriteValue();
         }
 
         public void SetFileTransferLocation(string command, Cpu cpu)
         {
-            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"];
+            var fileTransferLocation = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"];
 
             if (command.Equals("USB", StringComparison.OrdinalIgnoreCase))
             {
-                _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(true);
+                _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.Assign(true);
             }
             else
             {
                 {
-                    _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.Assign(false);
+                    _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.Assign(false);
                 }
             }
 
-            _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].WriteValue();
+            _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].WriteValue();
 
         }
 
         public List<AirkanInputFileInfo> GetAirkanInputFiles()
         {
-            var fileTransferLocation = _cpu.Tasks["DataTrans1"].Variables["FileTransferLocation"].Value.ToBoolean(null);
+            var fileTransferLocation = _cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null);
             var list = new List<AirkanInputFileInfo>();
 
-            var fileNamesVariable = _cpu.Tasks["DataTrans1"].Variables["FileNames"];
+            var fileNamesVariable = _cpu.Tasks["DataTransf"].Variables["FileNames"];
             if (fileNamesVariable.IsConnected)
             {
 
@@ -381,9 +685,59 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        private string ToCsv(Variable printData)
+        {
+            var list = new List<string>();
+            foreach (Variable member in printData.Members)
+            {
+                list.Add(member["RunQuantity"].Value.ToString());
+                list.Add(member["DuctJob.Length_1"].Value.ToString());
+                list.Add(member["DuctJob.Length_2"].Value.ToString());
+                list.Add(member["DuctJob.Type"].Value.ToString());
+                list.Add(member["DuctJob.Bead"].Value.ToString());
+                list.Add(member["DuctJob.Damper"].Value.ToString());
+                list.Add(member["DuctJob.ConnTypeR"].Value.ToString());
+                list.Add(member["DuctJob.ConnTypeL"].Value.ToString());
+                list.Add(member["DuctJob.CleatMode"].Value.ToString());
+                list.Add(member["DuctJob.CleatType"].Value.ToString());
+                list.Add(member["DuctJob.LockType"].Value.ToString());
+                list.Add(member["DuctJob.SealantUsed"].Value.ToString());
+                list.Add(member["DuctJob.Brake"].Value.ToString());
+                list.Add(member["DuctJob.Insulation"].Value.ToString());
+                list.Add(member["DuctJob.PinSpacing"].Value.ToString());
+                list.Add(member["DuctJob.TieRodType_Leg_1"].Value.ToString());
+                list.Add(member["DuctJob.TieRodType_Leg_2"].Value.ToString());
+                list.Add(member["DuctJob.TieRodHoles_Leg_1"].Value.ToString());
+                list.Add(member["DuctJob.TieRodHoles_Leg_2"].Value.ToString());
+                list.Add(member["DuctJob.HoleSize"].Value.ToString());
+                list.Add(member["Basic.CoilGauge"].Value.ToString());
+                list.Add(member["Basic.CoilWidth"].Value.ToString());
+                list.Add(member["Basic.TotalLength"].Value.ToString());
+                list.Add(member["Basic.TotalLength"].Value.ToString());
+                list.Add(member["NeoPrintData"]["ReferenceERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["DeliveryYardERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["CustomerOrderERP"].Value.ToString());
+                list.Add(member["NeoPrintData"]["BarCode"].Value.ToString());
+                list.Add(member["NeoPrintData"]["PieceNumberERP"].Value.ToString());
+                list.Add(member["CustomerInfo"]["CustomerAddress"].Value.ToString());
+                list.Add(member["CustomerInfo"]["CustomerName"].Value.ToString());
+
+            }
+
+            var csv = String.Join(",", list);
+
+            return csv;
+        }
+
+
         private void ClearDataTransfer()
         {
             Variable dataTransfer = _cpu.Variables[dataTransferVariable];
+
+            if (dataTransfer.Members == null)
+            {
+                return;
+            }
 
             foreach (Variable member in dataTransfer.Members)
             {
@@ -425,15 +779,23 @@ namespace ControlWorks.Services.PVI.Variables
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
             ClearDataTransfer();
+            var directoryPath = GetFileLocationJobs();
+            var fi = new FileInfo(filePath);
+            var fullPath = Path.Combine(directoryPath, fi.Name);
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(fullPath))
             {
-                Trace.TraceError($"File {filePath} not found.");
-                throw new System.Exception($"File {filePath} not found.");
+                Trace.TraceError($"File {fullPath} not found.");
+                return;
             }
             var list = new List<bool>();
-            var lines = File.ReadAllLines(filePath);
+            var lines = File.ReadAllLines(fullPath);
             Variable dataTransfer = cpu.Variables[dataTransferVariable];
+
+            if (dataTransfer.Members == null)
+            {
+                return;
+            }
 
             for (int i = 0; i < lines.Length; i++)
             {

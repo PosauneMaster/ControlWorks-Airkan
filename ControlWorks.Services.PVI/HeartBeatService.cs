@@ -5,9 +5,25 @@ namespace ControlWorks.Services.PVI
 {
     public class HeartBeatService
     {
-        public HeartBeatService() { }
+        private static readonly object SyncLock = new object();
+        private static HeartBeatService _heartBeatService = null;
+        public static HeartBeatService Instance
+        {
+            get
+            {
+                lock (SyncLock)
+                {
+                    if (_heartBeatService == null)
+                    {
+                        _heartBeatService = new HeartBeatService();
+                    }
+                    return _heartBeatService;
+                }
+            }
+        }
+        private HeartBeatService() { }
 
-        public void Run(Variable heartBeatVariable)
+        public static void Run(Variable heartBeatVariable)
         {
             if (heartBeatVariable != null)
             {
@@ -30,7 +46,6 @@ namespace ControlWorks.Services.PVI
                     };
                 }
             }
-
         }
     }
 }

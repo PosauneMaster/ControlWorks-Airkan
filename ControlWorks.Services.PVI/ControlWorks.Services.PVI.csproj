@@ -42,6 +42,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
@@ -55,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BarTenderFileService.cs" />
+    <Compile Include="DatabaseService.cs" />
     <Compile Include="Database\AirkanOee.cs" />
     <Compile Include="DataResponse.cs" />
     <Compile Include="FileWatcher.cs" />
@@ -65,6 +67,8 @@
     <Compile Include="Models\AirkanConfiguration.cs" />
     <Compile Include="Models\AirkanInputFileInfo.cs" />
     <Compile Include="Models\AlarmInfo.cs" />
+    <Compile Include="Models\Orders.cs" />
+    <Compile Include="Models\Production.cs" />
     <Compile Include="Models\RecipeAddedEventArgs.cs" />
     <Compile Include="Models\CommandStatus.cs" />
     <Compile Include="Models\StatusInfo.cs" />
@@ -85,6 +89,7 @@
     <Compile Include="Task\CpuDataService.cs" />
     <Compile Include="Task\CpuDetails.cs" />
     <Compile Include="Task\TaskLoader.cs" />
+    <Compile Include="UsbMonitor.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Variables\AirkanVariableService.cs" />
     <Compile Include="Variables\VariableConfiguration.cs" />

@@ -1,9 +1,11 @@
 ﻿using BR.AN.PviServices;
 
+using ControlWorks.Common.Logging;
 using ControlWorks.Services.PVI.Panel;
 using ControlWorks.Services.PVI.Variables;
 
 using System;
+using System.Diagnostics;
 
 namespace ControlWorks.Services.PVI.Impl
 {
@@ -36,28 +38,42 @@ namespace ControlWorks.Services.PVI.Impl
 
         public void ConnectPviService()
         {
+
             _connectionTime = DateTime.Now;
-            _service = new Service(Guid.NewGuid().ToString());
+            if (_service == null)
+            {
+                _service = new Service(Guid.NewGuid().ToString());
+            }
 
             _service.Connected += _service_Connected;
             _service.Disconnected += _service_Disconnected;
             _service.Error += _service_Error;
 
-            _service.Connect();
+            if (_service.IsConnected == false)
+            {
+                _service.Connect();
+            }
+            else
+            {
+                ConnectCpus(_service);
+            }
         }
 
+        private bool _isConnecting = false;
         public void ReConnectPviService()
         {
-            if (_service.HasError || !_service.IsConnected)
+            if (_isConnecting == false)
             {
+                _isConnecting = true;
+
                 _service.Connected -= _service_Connected;
                 _service.Disconnected -= _service_Disconnected;
                 _service.Error -= _service_Error;
 
-                _service.Dispose();
-
                 ConnectPviService();
+                _isConnecting = false;
             }
+
         }
 
         public void DisconnectPviService()
@@ -90,23 +106,31 @@ namespace ControlWorks.Services.PVI.Impl
         private void _service_Error(object sender, PviEventArgs e)
         {
             var pviEventMsg = Utils.FormatPviEventMessage("ServiceWrapper._service_Error", e);
+            Trace.TraceError(pviEventMsg);
             _eventNotifier.OnPviServiceError(sender, new PviApplicationEventArgs() { Message = pviEventMsg });
         }
 
         private void _service_Disconnected(object sender, PviEventArgs e)
         {
             var pviEventMsg = Utils.FormatPviEventMessage("ServiceWrapper._service_Disconnected", e);
+            Trace.TraceError(pviEventMsg);
             _eventNotifier.OnPviServiceDisconnected(sender, new PviApplicationEventArgs() { Message = pviEventMsg });
         }
 
         private void _service_Connected(object sender, PviEventArgs e)
         {
+            Trace.TraceInformation("Service Connected");
             string serviceName = String.Empty;
             if (sender is Service service)
             {
                 serviceName = service.FullName;
-            }
+                ConnectCpus(service);
 
+            }
+        }
+
+        private void ConnectCpus(Service service, PviEventArgs args = null)
+        {
             var cpuWrapper = new CpuWrapper(_service, _eventNotifier);
             var variableWrapper = new VariableWrapper(_service, _eventNotifier);
 
@@ -116,9 +140,9 @@ namespace ControlWorks.Services.PVI.Impl
 
             var variableManager = new VariableManager(variableWrapper, variableInfo);
 
-            var pviEventMsg = Utils.FormatPviEventMessage($"ServiceWrapper._service_Connected; ServiceName={serviceName}", e);
+            var pviEventMsg = Utils.FormatPviEventMessage($"ServiceWrapper._service_Connected; ServiceName={service.FullName}", args);
 
-            _eventNotifier.OnPviServiceConnected(sender, new PviApplicationEventArgs()
+            _eventNotifier.OnPviServiceConnected(service, new PviApplicationEventArgs()
             {
                 Message = pviEventMsg,
                 ServiceWrapper = this,

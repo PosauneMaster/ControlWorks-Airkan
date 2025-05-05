@@ -239,6 +239,25 @@ namespace ControlWorks.Services.PVI.Impl
 
             if (cpu.Tasks.ContainsKey(taskName))
             {
+                if (cpu.Tasks[taskName].Variables.Count == 0)
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (cpu.Tasks[taskName].Variables.Count > 0)
+                        {
+                            break;
+                        }
+                        Trace.TraceInformation("Task Variables are 0. Sleeping for 10 seconds");
+                        System.Threading.Thread.Sleep(TimeSpan.FromSeconds(10));
+                    }
+
+                }
+
+                if (cpu.Tasks[taskName].Variables.Count == 0)
+                {
+                    Trace.TraceError("Task Variables failed to initialize");
+                }
+
                 if (cpu.Tasks[taskName].Variables.ContainsKey(variableName))
                 {
                     var taskVariable = cpu.Tasks[taskName].Variables[variableName];
