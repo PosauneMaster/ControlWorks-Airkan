@@ -97,5 +97,9 @@ namespace ControlWorks.Common
             ConfigurationManager.ConnectionStrings["Airkan"].ConnectionString;
 
         public static string CpuConnectionDeviceType => ConfigurationManager.AppSettings["CpuConnectionDeviceType"];
+
+        public static string FileServerDomain => ConfigurationManager.AppSettings["FileServerDomain"];
+        public static string FileServerUserName => ConfigurationManager.AppSettings["FileServerUsername"];
+        public static string FileServerPassword => ConfigurationManager.AppSettings["FileServerPassword"];
     }
 }

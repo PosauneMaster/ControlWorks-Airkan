@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BR.AN.PviServices">
-      <HintPath>..\bin\BR.AN.PviServices.dll</HintPath>
+      <HintPath>..\..\..\Program Files\BRAutomation4\PVI\V4.12\PVI\Tools\PVITransfer\BR.AN.PviServices.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />

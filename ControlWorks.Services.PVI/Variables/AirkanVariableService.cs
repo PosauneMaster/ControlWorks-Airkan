@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ControlWorks.Common;
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
@@ -77,6 +79,32 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        public class NetworkConnection
+        {
+            public static void MapShare(string networkPath, string username, string password)
+            {
+                var psi = new ProcessStartInfo("net", $"use \"{networkPath}\" /user:{username} {password}")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                using (var process = Process.Start(psi))
+                {
+                    process.WaitForExit();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    if (process.ExitCode != 0)
+                    {
+                        Trace.TraceError($"Failed to map network drive: {error}");
+                    }
+                }
+            }
+        }
+
         private List<string> GetFiles()
         {
             var list = new List<string>();
@@ -99,16 +127,16 @@ namespace ControlWorks.Services.PVI.Variables
                         if (d.DriveType == DriveType.Removable && d.IsReady)
                         {
                             Trace.TraceInformation($"Reading from USB Drive {d.Name}");
+                            var allowedExtensions = new[] { ".txt", ".csv", ".dat" };
                             directoryPath = d.RootDirectory.FullName;
-                            var files = d.RootDirectory.GetFiles();
+                            var files = d.RootDirectory.GetFiles()
+                                .Where(f => allowedExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
+                                .OrderByDescending(f => f.LastWriteTime)
+                                .Take(20);
+
+                            foreach (var fi in files)
                             {
-                                foreach (var fi in files)
-                                {
-                                    if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
-                                    {
-                                        list.Add(fi.Name);
-                                    }
-                                }
+                                list.Add(fi.Name);
                             }
                         }
                     }
@@ -117,13 +145,29 @@ namespace ControlWorks.Services.PVI.Variables
                 {
                     directoryPath = GetFileLocationJobs();
 
+                    Trace.TraceError($"Domain: {@ConfigurationProvider.FileServerDomain}");
+                    Trace.TraceError($"Username: {@ConfigurationProvider.FileServerUserName}");
+                    Trace.TraceError($"Password: {ConfigurationProvider.FileServerPassword}");
+                    Trace.TraceError($"Path: {directoryPath}");
+
+                    var fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
+
+                    Trace.TraceError($"Username: {fileServerUsername}");
+
+                    NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
+                        var allowedExtensions = new[] { ".txt", ".csv", ".dat" };
                         var di = new DirectoryInfo(directoryPath);
                         var fileNames = Directory
                             .GetFiles(directoryPath)
-                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"))
-                            .ToList();
+                            .Where(f => allowedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+                            .Select(f => new FileInfo(f))
+                            .OrderBy(f => f.LastWriteTime)
+                            .Take(20)
+                            .Select(f => f.FullName)  // convert back to string paths
+                            .ToArray();
 
                         Trace.TraceInformation("Switching file location to Network");
 
@@ -843,7 +887,7 @@ namespace ControlWorks.Services.PVI.Variables
             if (list.TrueForAll(v => v))
             {
                 dataTransfer.WriteValue();
-                Trace.TraceInformation($"File {filePath} processed without errors");
+                Trace.TraceInformation($"File {filePath} processed without errors!");
             }
             else
             {
