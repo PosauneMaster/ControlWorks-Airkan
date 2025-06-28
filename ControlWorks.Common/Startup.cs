@@ -24,10 +24,10 @@ namespace ControlWorks.Common
                     Directory.CreateDirectory(ConfigurationProvider.SettingsDirectory);
                 }
 
-                if (!Directory.Exists(ConfigurationProvider.AirkanNetworkFolder))
+                /*if (!Directory.Exists(ConfigurationProvider.AirkanNetworkFolder))
                 {
                     Directory.CreateDirectory(ConfigurationProvider.AirkanNetworkFolder);
-                }
+                }*/
 
                 Trace.TraceInformation(new string('*', 30));
                 Trace.TraceInformation("Starting application...");

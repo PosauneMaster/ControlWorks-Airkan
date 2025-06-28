@@ -5,13 +5,15 @@ namespace ControlWorks.Services.PVI.Models
     public class Orders
     {
         private string _customerOrder;
-        private string _status;
+        private string _statusOrder;
         private string _dateTime;
+        private string _pieceErp;
+        private string _pieceErpNumber;
+        private string _started;
+        private string _printed;
+        private string _completed;
         private string _misc1;
-        private string _misc2;
-        private string _misc3;
-        private string _misc4;
-        private string _misc5;
+        private string _side;
 
         private string CheckLength(string value)
         {
@@ -31,10 +33,10 @@ namespace ControlWorks.Services.PVI.Models
             get => _customerOrder;
             set => _customerOrder = CheckLength(value);
         }
-        public string Status
+        public string StatusOrder
         {
-            get => _status;
-            set => _status = CheckLength(value);
+            get => _statusOrder;
+            set => _statusOrder = CheckLength(value);
         }
 
         public string DateTime
@@ -43,35 +45,47 @@ namespace ControlWorks.Services.PVI.Models
             set => _dateTime = CheckLength(value);
         }
 
+        public string PieceErp
+        {
+            get => _pieceErp;
+            set => _pieceErp = CheckLength(value);
+        }
+
+
+        public string PieceErpNumber
+        {
+            get => _pieceErpNumber;
+            set => _pieceErpNumber = CheckLength(value);
+        }
+
+        public string Started
+        {
+            get => _started;
+            set => _started = CheckLength(value);
+        }
+
+        public string Printed
+        {
+            get => _printed;
+            set => _printed = CheckLength(value);
+        }
+
+        public string Completed
+        {
+            get => _completed;
+            set => _completed = CheckLength(value);
+        }
+
         public string Misc1
         {
             get => _misc1;
             set => _misc1 = CheckLength(value);
         }
 
-
-        public string Misc2
+        public string Side
         {
-            get => _misc2;
-            set => _misc2 = CheckLength(value);
-        }
-
-        public string Misc3
-        {
-            get => _misc3;
-            set => _misc3 = CheckLength(value);
-        }
-
-        public string Misc4
-        {
-            get => _misc4;
-            set => _misc4 = CheckLength(value);
-        }
-
-        public string Misc5
-        {
-            get => _misc5;
-            set => _misc5 = CheckLength(value);
+            get => _side;
+            set => _side = CheckLength(value);
         }
     }
 }

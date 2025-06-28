@@ -30,14 +30,16 @@ namespace ControlWorks.Airkan.Tests
             var orderData = new Orders
             {
                 CustomerOrder = "CustomerOrder",
-                Status = "Status",
+                StatusOrder = "StatusOrder",
                 DateTime = "DateTime",
+                PieceErp = "PieceErp",
+                PieceErpNumber = "PieceErpNumber",
+                Started = "Started",
+                Printed = "Printed",
+                Completed = "Completed",
                 Misc1 = "Misc1",
-                Misc2 = "Misc2",
-                Misc3 = "Misc3",
-                Misc4 = "Misc4",
-                Misc5 = "Misc5"
-            };
+                Side = "Side"
+        };
 
             var dbService = new DatabaseService();
             dbService.WriteToOrderDataDatabase(orderData);

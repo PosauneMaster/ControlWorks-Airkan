@@ -20,7 +20,7 @@ namespace ControlWorks.Services.PVI.Database
             try
             {
                 var sb = new StringBuilder();
-                sb.AppendLine("SELECT [CustomerOrder],[Status],[DateTime],[Misc1],[Misc2],[Misc3],[Misc4],[Misc5] ");
+                sb.AppendLine("SELECT [CustomerOrder],[StatusOrder],[DateTime],[PieceERP],[PieceERPNumber],[Started],[Printed],[Completed],[Misc1],[Side]");
                 sb.AppendLine("FROM [dbo].[LF2024_ORDERS]");
 
                 using (var connection = new SqlConnection(ConfigurationProvider.AirkanConnectionString))
@@ -32,26 +32,31 @@ namespace ControlWorks.Services.PVI.Database
                         command.CommandType = CommandType.Text;
                         reader = command.ExecuteReader();
                         var customerOrderOrdinal = reader.GetOrdinal("CustomerOrder");
-                        var statusOrdinal = reader.GetOrdinal("Status");
+                        var statusOrderOrdinal = reader.GetOrdinal("StatusOrder");
                         var dateTimeOrdinal = reader.GetOrdinal("DateTime");
+                        var pieceErpOrdinal = reader.GetOrdinal("PieceERP");
+                        var pieceErpNumberOrdinal = reader.GetOrdinal("PieceERPNumber");
+                        var startedOrdinal = reader.GetOrdinal("Started");
+                        var printedOrdinal = reader.GetOrdinal("Printed");
+                        var completedOrdinal = reader.GetOrdinal("Completed");
                         var misc1Ordinal = reader.GetOrdinal("Misc1");
-                        var misc2Ordinal = reader.GetOrdinal("Misc2");
-                        var misc3Ordinal = reader.GetOrdinal("Misc3");
-                        var misc4Ordinal = reader.GetOrdinal("Misc4");
-                        var misc5Ordinal = reader.GetOrdinal("Misc5");
+                        var sideOrdinal = reader.GetOrdinal("Side");
+
                         while (reader.Read())
                         {
                             list.Add(
                                 new LF2024_ORDERS
                                 {
                                     CustomerOrder = reader.GetString(customerOrderOrdinal),
-                                    Status = reader.GetString(statusOrdinal),
+                                    StatusOrder = reader.GetString(statusOrderOrdinal),
                                     DateTime = reader.GetString(dateTimeOrdinal),
+                                    PieceErp = reader.GetString(pieceErpOrdinal),
+                                    PieceErpNumber = reader.GetString(pieceErpNumberOrdinal),
+                                    Started = reader.GetString(startedOrdinal),
+                                    Printed = reader.GetString(printedOrdinal),
+                                    Completed = reader.GetString(completedOrdinal),
                                     Misc1 = reader.GetString(misc1Ordinal),
-                                    Misc2 = reader.GetString(misc2Ordinal),
-                                    Misc3 = reader.GetString(misc3Ordinal),
-                                    Misc4 = reader.GetString(misc4Ordinal),
-                                    Misc5 = reader.GetString(misc5Ordinal)
+                                    Side = reader.GetString(sideOrdinal)
                                 });
                         }
 
@@ -187,29 +192,33 @@ namespace ControlWorks.Services.PVI.Database
     public class LF2024_ORDERS
     {
         public string CustomerOrder { get; set; }
-        public string Status { get; set; }
+        public string StatusOrder { get; set; }
         public string DateTime { get; set; }
+        public string PieceErp { get; set; }
+        public string PieceErpNumber { get; set; }
+        public string Started { get; set; }
+        public string Printed { get; set; }
+        public string Completed { get; set; }
         public string Misc1 { get; set; }
-        public string Misc2 { get; set; }
-        public string Misc3 { get; set; }
-        public string Misc4 { get; set; }
-        public string Misc5 { get; set; }
+        public string Side { get; set; }
 
         public LF2024_ORDERS()
         {
         }
 
-        public LF2024_ORDERS(string customerOrder, string status, string dateTime, string misc1, string misc2,
-            string misc3, string misc4, string misc5)
+        public LF2024_ORDERS(string customerOrder, string statusOrder, string dateTime, string pieceErp, string pieceErpNumber,
+            string started, string printed, string completed, string misc1, string side)
         {
             CustomerOrder = customerOrder;
-            Status = status;
+            StatusOrder = statusOrder;
             DateTime = dateTime;
+            PieceErp = pieceErp;
+            PieceErpNumber = pieceErpNumber;
+            Started = started;
+            Printed = printed;
+            Completed = completed;
             Misc1 = misc1;
-            Misc2 = misc2;
-            Misc3 = misc3;
-            Misc4 = misc4;
-            Misc5 = misc5;
+            Side = side;
         }
     }
 }

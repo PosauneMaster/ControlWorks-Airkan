@@ -18,6 +18,8 @@ using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
 
+using System.Text.RegularExpressions;
+
 namespace ControlWorks.Services.PVI.Variables
 {
     public class AirkanVariableService
@@ -131,30 +133,28 @@ namespace ControlWorks.Services.PVI.Variables
                             directoryPath = d.RootDirectory.FullName;
                             var files = d.RootDirectory.GetFiles()
                                 .Where(f => allowedExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
-                                .OrderByDescending(f => f.LastWriteTime)
+                                .OrderBy(f => f.Name)
                                 .Take(20);
 
                             foreach (var fi in files)
                             {
                                 list.Add(fi.Name);
                             }
+                            break;
                         }
                     }
                 }
                 else
                 {
-                    directoryPath = GetFileLocationJobs();
-
-                    Trace.TraceError($"Domain: {@ConfigurationProvider.FileServerDomain}");
-                    Trace.TraceError($"Username: {@ConfigurationProvider.FileServerUserName}");
-                    Trace.TraceError($"Password: {ConfigurationProvider.FileServerPassword}");
-                    Trace.TraceError($"Path: {directoryPath}");
+                    directoryPath = GetFileLocationJobs(_cpu);
 
                     var fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
 
-                    Trace.TraceError($"Username: {fileServerUsername}");
-
                     NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+
+                    var printerPath = "\\\\srvsql1";
+                    Trace.TraceError($"Mapping printer path: {printerPath}");
+                    NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
@@ -164,7 +164,7 @@ namespace ControlWorks.Services.PVI.Variables
                             .GetFiles(directoryPath)
                             .Where(f => allowedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
                             .Select(f => new FileInfo(f))
-                            .OrderBy(f => f.LastWriteTime)
+                            .OrderBy(f => f.Name)
                             .Take(20)
                             .Select(f => f.FullName)  // convert back to string paths
                             .ToArray();
@@ -177,7 +177,6 @@ namespace ControlWorks.Services.PVI.Variables
                             var name = fi.Name;
                             list.Add(name);
                         }
-
                     }
                     else
                     {
@@ -222,11 +221,26 @@ namespace ControlWorks.Services.PVI.Variables
             };
         }
 
-        private string GetFileLocationJobs()
+        private string GetFileLocationJobs(Cpu cpu)
         {
-            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+            if (cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)) 
             {
-                return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+                DriveInfo[] allDrives = DriveInfo.GetDrives();
+
+                foreach (DriveInfo d in allDrives)
+                {
+                    if (d.DriveType == DriveType.Removable && d.IsReady)
+                    {
+                        return d.RootDirectory.FullName;
+                    }
+                }
+            }
+            else
+            {
+                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+                {
+                    return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+                }
             }
 
             return String.Empty;
@@ -262,7 +276,7 @@ namespace ControlWorks.Services.PVI.Variables
             }
             catch (System.Exception e)
             {
-                Trace.TraceError(e.Message);
+                Trace.TraceError(e.ToString());
             }
         }
 
@@ -363,7 +377,8 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
                 {
-                    var filename = $"{customerOrderErp}_{DateTime.Now:yyyyMMddHHmmss}.csv";
+                    var cleanName = Regex.Replace(customerOrderErp, @"[<>:""/\\|?*]", "_");
+                    var filename = $"{cleanName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
                     var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
 
                     if (!Directory.Exists(location))
@@ -454,6 +469,17 @@ namespace ControlWorks.Services.PVI.Variables
 
                 }
 
+                if (variable.Name == "DeleteFile")
+                {
+                    if (variable.Value == true)
+                    {
+                        var result = FileNameToDelete();
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
+                    }
+                }
             }
         }
 
@@ -492,7 +518,8 @@ namespace ControlWorks.Services.PVI.Variables
 
                 Trace.TraceInformation("Write Production Data to database");
                 var service = new DatabaseService();
-                return service.WriteToProductionData(productionData);
+                return service.WriteToOrderData(productionData);
+                // return service.WriteToProductionData(productionData);
             }
 
             Trace.TraceInformation("ProductionData variable is not found");
@@ -512,6 +539,24 @@ namespace ControlWorks.Services.PVI.Variables
                     ProcessInputFile(path, _cpu);
                 }
             }
+        }
+
+        public bool FileNameToDelete()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileNameToLoad"))
+            {
+                var sendToDisplayVariable = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
+                var index = sendToDisplayVariable.Value.ToInt32(null);
+                if (_inputFiles.TryGetValue(index, out var path))
+                {
+                    Trace.TraceInformation($"Deleting Index {index} {path}");
+                    return DeleteInputFile(path, _cpu);
+                }
+
+                return false;
+            }
+
+            return false;
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
@@ -823,7 +868,7 @@ namespace ControlWorks.Services.PVI.Variables
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
             ClearDataTransfer();
-            var directoryPath = GetFileLocationJobs();
+            var directoryPath = GetFileLocationJobs(cpu);
             var fi = new FileInfo(filePath);
             var fullPath = Path.Combine(directoryPath, fi.Name);
 
@@ -880,6 +925,8 @@ namespace ControlWorks.Services.PVI.Variables
                         list.Add(dataTransfer.Members[i]["NeoPrintData"]["PieceNumberERP"].AssignChecked(split[28]));
                         list.Add(dataTransfer.Members[i]["CustomerInfo"]["CustomerAddress"].AssignChecked(split[29]));
                         list.Add(dataTransfer.Members[i]["CustomerInfo"]["CustomerName"].AssignChecked(split[30]));
+                        list.Add(dataTransfer.Members[i]["NeoPrintData"]["ConnTypeR"].AssignChecked(split[31]));
+                        list.Add(dataTransfer.Members[i]["NeoPrintData"]["ConnTypeL"].AssignChecked(split[32]));
                     }
                 }
             }
@@ -893,6 +940,22 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 Trace.TraceError($"File {filePath} not processed.  Invalid data detected");
             }
+        }
+
+        public bool DeleteInputFile(string filePath, Cpu cpu)
+        {
+            var directoryPath = GetFileLocationJobs(cpu);
+            var fi = new FileInfo(filePath);
+            var fullPath = Path.Combine(directoryPath, fi.Name);
+
+            if (!File.Exists(fullPath))
+            {
+                Trace.TraceError($"File {fullPath} not found.");
+                return false;
+            }
+
+            File.Delete(fullPath);
+            return true;
         }
     }
 

@@ -91,7 +91,7 @@ namespace ControlWorks.Services.PVI
             var werf = dataTransferCompletedParts["NeoPrintData.DeliveryYardERP"].Value.ToString(CultureInfo.InvariantCulture);
             var klantreferentie = dataTransferCompletedParts["CustomerInfo.CustomerName"].Value.ToString(CultureInfo.InvariantCulture);
             var barcode = dataTransferCompletedParts["NeoPrintData.BarCode"].Value.ToString(CultureInfo.InvariantCulture);
-            var kader1 = dataTransferCompletedParts["DuctJob.ConnTypeR"].Value.ToString(CultureInfo.InvariantCulture);
+            var kader1 = dataTransferCompletedParts["NeoPrintData.ConnTypeR"].Value.ToString(CultureInfo.InvariantCulture);
             var kader2 = dataTransferCompletedParts["DuctJob.ConnTypeL"].Value.ToString(CultureInfo.InvariantCulture);
             var maat1 = dataTransferCompletedParts["DuctJob.Length_1"].Value.ToString(CultureInfo.InvariantCulture);
             var maat2 = dataTransferCompletedParts["DuctJob.Length_2"].Value.ToString(CultureInfo.InvariantCulture);
