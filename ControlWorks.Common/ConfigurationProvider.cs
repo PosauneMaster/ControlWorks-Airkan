@@ -98,7 +98,8 @@ namespace ControlWorks.Common
 
         public static string CpuConnectionDeviceType => ConfigurationManager.AppSettings["CpuConnectionDeviceType"];
 
-        public static string FileServerDomain => ConfigurationManager.AppSettings["FileServerDomain"];
+        public static string FileServerDomainDownload => ConfigurationManager.AppSettings["FileServerDomainDownload"];
+        public static string FileServerDomainPrinter => ConfigurationManager.AppSettings["FileServerDomainPrinter"];
         public static string FileServerUserName => ConfigurationManager.AppSettings["FileServerUsername"];
         public static string FileServerPassword => ConfigurationManager.AppSettings["FileServerPassword"];
     }

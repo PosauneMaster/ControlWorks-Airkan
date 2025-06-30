@@ -148,13 +148,15 @@ namespace ControlWorks.Services.PVI.Variables
                 {
                     directoryPath = GetFileLocationJobs(_cpu);
 
-                    var fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
+                    var fileServerUsername = @ConfigurationProvider.FileServerDomainDownload + "\\" + @ConfigurationProvider.FileServerUserName;
 
                     NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
-                    var printerPath = "\\\\srvsql1";
-                    Trace.TraceError($"Mapping printer path: {printerPath}");
-                    NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+                    var printerPath = ConfigurationProvider.FileServerDomainPrinter;
+                    if (directoryPath != printerPath)
+                    {
+                        NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+                    }
 
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
