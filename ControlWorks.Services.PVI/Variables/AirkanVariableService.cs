@@ -411,16 +411,23 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (variable.Name == "SendToPrinter")
                 {
-                    if (variable.Value.ToBoolean(null) == true)
+                    try
                     {
-                        var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
-                        
-                        var result = PrintData(printDataVariable);
-                        if (result)
+                        if (variable.Value.ToBoolean(null) == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
+
+                            var result = PrintData(printDataVariable);
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Print Data Failed. {ex.Message}\n{ex}");
                     }
                 }
 
@@ -435,28 +442,42 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        Trace.TraceInformation("Product Finished received as true");
-
-                        var result = WriteToProductionDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            Trace.TraceInformation("Product Finished received as true");
+
+                            var result = WriteToProductionDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To ProductionData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
                 if (variable.Name == "SendOrderData")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        var result = WriteToOrderDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var result = WriteToOrderDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To OrderData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
 
