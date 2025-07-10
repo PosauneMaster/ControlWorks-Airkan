@@ -19,6 +19,7 @@ using ControlWorks.Services.PVI.Models;
 using Newtonsoft.Json;
 
 using System.Text.RegularExpressions;
+using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -103,6 +104,10 @@ namespace ControlWorks.Services.PVI.Variables
                     {
                         Trace.TraceError($"Failed to map network drive: {error}");
                     }
+                    else
+                    {
+                        Trace.TraceInformation($"Mapped drive {networkPath}");
+                    }
                 }
             }
         }
@@ -146,24 +151,22 @@ namespace ControlWorks.Services.PVI.Variables
                 }
                 else
                 {
-                    directoryPath = GetFileLocationJobs(_cpu);
+                    var downloadPath = GetFileLocationJobs(_cpu);
+                    var downloadDirectoryPath = $"{@ConfigurationProvider.FileServerDomainDownload}{downloadPath}";
+                    var fileServerUsername = ConfigurationProvider.FileServerUserName;
 
-                    var fileServerUsername = @ConfigurationProvider.FileServerDomainDownload + "\\" + @ConfigurationProvider.FileServerUserName;
+                    NetworkConnection.MapShare(downloadDirectoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
-                    NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+                    var printerDirectoryPath = GetPrinterLocation(_cpu);
 
-                    var printerPath = ConfigurationProvider.FileServerDomainPrinter;
-                    if (directoryPath != printerPath)
-                    {
-                        NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
-                    }
+                    NetworkConnection.MapShare(printerDirectoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
-                    if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
+                    if (!String.IsNullOrEmpty(downloadDirectoryPath) && Directory.Exists(downloadDirectoryPath))
                     {
                         var allowedExtensions = new[] { ".txt", ".csv", ".dat" };
-                        var di = new DirectoryInfo(directoryPath);
+                        var di = new DirectoryInfo(downloadDirectoryPath);
                         var fileNames = Directory
-                            .GetFiles(directoryPath)
+                            .GetFiles(downloadDirectoryPath)
                             .Where(f => allowedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
                             .Select(f => new FileInfo(f))
                             .OrderBy(f => f.Name)
@@ -182,9 +185,9 @@ namespace ControlWorks.Services.PVI.Variables
                     }
                     else
                     {
-                        Trace.TraceError($"The directory path {directoryPath} is not found");
+                        Trace.TraceError($"The directory path {downloadDirectoryPath} is not found");
                     }
-                    SetFileWatcher(directoryPath);
+                    SetFileWatcher(downloadDirectoryPath);
                 }
             }
             catch (System.Exception e)
@@ -222,6 +225,27 @@ namespace ControlWorks.Services.PVI.Variables
                 SetFiles();
             };
         }
+
+        private string GetPrinterLocation(Cpu cpu)
+        {
+
+            var printerPath = @"\printer";
+            var directoryPath = $"{@ConfigurationProvider.FileServerDomainDownload}{printerPath}";
+
+            return directoryPath;
+
+
+
+            //if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
+            //{
+            //    var value = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value;
+            //    return _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+            //}
+
+            //return String.Empty;
+
+        }
+
 
         private string GetFileLocationJobs(Cpu cpu)
         {
@@ -381,7 +405,7 @@ namespace ControlWorks.Services.PVI.Variables
                 {
                     var cleanName = Regex.Replace(customerOrderErp, @"[<>:""/\\|?*]", "_");
                     var filename = $"{cleanName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
-                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+                    var location = GetPrinterLocation(_cpu);
 
                     if (!Directory.Exists(location))
                     {
@@ -393,6 +417,10 @@ namespace ControlWorks.Services.PVI.Variables
                         var path = Path.Combine(location, filename);
                         File.WriteAllText(path, sb.ToString());
                         Trace.TraceInformation($"Print file sent to {path}");
+                    }
+                    else
+                    {
+                        Trace.TraceError($"Unable to write file: {filename} to {location}");
                     }
                 }
 
