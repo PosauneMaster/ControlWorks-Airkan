@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
@@ -40,6 +41,12 @@ namespace ControlWorks.Services.PVI
 
         private void CheckFiles(object state)
         {
+            if (!Directory.Exists(DirectoryPath))
+            {
+                Trace.TraceError($"Unable to locate Directory {DirectoryPath}");
+                return;
+            }
+
             var files = Directory.GetFiles(DirectoryPath);
             if (files.Length != _cache.Count)
             {

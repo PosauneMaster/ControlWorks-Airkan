@@ -19,6 +19,7 @@ using ControlWorks.Services.PVI.Models;
 using Newtonsoft.Json;
 
 using System.Text.RegularExpressions;
+using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -102,6 +103,10 @@ namespace ControlWorks.Services.PVI.Variables
                     if ((process.ExitCode != 0) && (process.ExitCode != 1219))
                     {
                         Trace.TraceError($"Failed to map network drive: {error}");
+                    }
+                    else
+                    {
+                        Trace.TraceInformation($"Mapped drive {networkPath}");
                     }
                 }
             }
@@ -388,7 +393,7 @@ namespace ControlWorks.Services.PVI.Variables
                 {
                     var cleanName = Regex.Replace(customerOrderErp, @"[<>:""/\\|?*]", "_");
                     var filename = $"{cleanName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
-                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+                    var location = GetPrinterLocation(_cpu);
 
                     if (!Directory.Exists(location))
                     {
@@ -400,6 +405,10 @@ namespace ControlWorks.Services.PVI.Variables
                         var path = Path.Combine(location, filename);
                         File.WriteAllText(path, sb.ToString());
                         Trace.TraceInformation($"Print file sent to {path}");
+                    }
+                    else
+                    {
+                        Trace.TraceError($"Unable to write file: {filename} to {location}");
                     }
                 }
 
@@ -418,16 +427,23 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (variable.Name == "SendToPrinter")
                 {
-                    if (variable.Value.ToBoolean(null) == true)
+                    try
                     {
-                        var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
-                        
-                        var result = PrintData(printDataVariable);
-                        if (result)
+                        if (variable.Value.ToBoolean(null) == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
+
+                            var result = PrintData(printDataVariable);
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Print Data Failed. {ex.Message}\n{ex}");
                     }
                 }
 
@@ -442,28 +458,42 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        Trace.TraceInformation("Product Finished received as true");
-
-                        var result = WriteToProductionDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            Trace.TraceInformation("Product Finished received as true");
+
+                            var result = WriteToProductionDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To ProductionData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
                 if (variable.Name == "SendOrderData")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        var result = WriteToOrderDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var result = WriteToOrderDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To OrderData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
 
