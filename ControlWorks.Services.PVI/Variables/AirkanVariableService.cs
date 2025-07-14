@@ -393,7 +393,7 @@ namespace ControlWorks.Services.PVI.Variables
                 {
                     var cleanName = Regex.Replace(customerOrderErp, @"[<>:""/\\|?*]", "_");
                     var filename = $"{cleanName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
-                    var location = GetPrinterLocation(_cpu);
+                    var location = GetFileLocationPrinter(_cpu);
 
                     if (!Directory.Exists(location))
                     {
