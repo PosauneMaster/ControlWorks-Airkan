@@ -114,13 +114,15 @@ namespace ControlWorks.Services.PVI
             var orderData = new Orders
             {
                 CustomerOrder = orderVariable.Members["CustomerOrder"].Value.ToString(CultureInfo.InvariantCulture),
-                Status = orderVariable.Members["Status"].Value.ToString(CultureInfo.InvariantCulture),
+                StatusOrder = orderVariable.Members["StatusOrder"].Value.ToString(CultureInfo.InvariantCulture),
                 DateTime = orderVariable.Members["DateTime"].Value.ToString(CultureInfo.InvariantCulture),
+                PieceErp = orderVariable.Members["PieceERP"].Value.ToString(CultureInfo.InvariantCulture),
+                PieceErpNumber = orderVariable.Members["PieceERPNumber"].Value.ToString(CultureInfo.InvariantCulture),
+                Started = orderVariable.Members["Started"].Value.ToString(CultureInfo.InvariantCulture),
+                Printed = orderVariable.Members["Printed"].Value.ToString(CultureInfo.InvariantCulture),
+                Completed = orderVariable.Members["Completed"].Value.ToString(CultureInfo.InvariantCulture),
+                Side = orderVariable.Members["Side"].Value.ToString(CultureInfo.InvariantCulture),
                 Misc1 = orderVariable.Members["Misc1"].Value.ToString(CultureInfo.InvariantCulture),
-                Misc2 = orderVariable.Members["Misc2"].Value.ToString(CultureInfo.InvariantCulture),
-                Misc3 = orderVariable.Members["Misc3"].Value.ToString(CultureInfo.InvariantCulture),
-                Misc4 = orderVariable.Members["Misc4"].Value.ToString(CultureInfo.InvariantCulture),
-                Misc5 = orderVariable.Members["Misc5"].Value.ToString(CultureInfo.InvariantCulture)
             };
 
             return WriteToOrderDataDatabase(orderData);
@@ -132,9 +134,9 @@ namespace ControlWorks.Services.PVI
             {
                 var sbSql = new StringBuilder();
                 sbSql.AppendLine($"INSERT INTO [dbo].[{_sqlConnectionService.OrdersTableName}]");
-                sbSql.AppendLine("([CustomerOrder],[Status],[DateTime],[Misc1],[Misc2],[Misc3],[Misc4],[Misc5])");
+                sbSql.AppendLine("([CustomerOrder],[StatusOrder],[DateTime],[PieceERP],[PieceERPNumber],[Started],[Printed],[Completed],[Misc1],[Side])");
                 sbSql.AppendLine("VALUES");
-                sbSql.AppendLine("(@CustomerOrder, @Status, @DateTime, @Misc1, @Misc2, @Misc3, @Misc4, @Misc5)");
+                sbSql.AppendLine("(@CustomerOrder, @StatusOrder, @DateTime, @PieceErp, @PieceErpNumber, @Started, @Printed, @Completed, @Misc1, @Side)");
 
                 using (var connection = new SqlConnection(_sqlConnectionService.OrdersConnectionString()))
                 {
@@ -142,13 +144,15 @@ namespace ControlWorks.Services.PVI
                     using (var command = connection.CreateCommand())
                     {
                         command.Parameters.AddWithValue("CustomerOrder", orderData.CustomerOrder);
-                        command.Parameters.AddWithValue("Status", orderData.Status);
+                        command.Parameters.AddWithValue("StatusOrder", orderData.StatusOrder);
                         command.Parameters.AddWithValue("DateTime", orderData.DateTime);
+                        command.Parameters.AddWithValue("PieceErp", orderData.PieceErp);
+                        command.Parameters.AddWithValue("PieceErpNumber", orderData.PieceErpNumber);
+                        command.Parameters.AddWithValue("Started", orderData.Started);
+                        command.Parameters.AddWithValue("Printed", orderData.Printed);
+                        command.Parameters.AddWithValue("Completed", orderData.Completed);
                         command.Parameters.AddWithValue("Misc1", orderData.Misc1);
-                        command.Parameters.AddWithValue("Misc2", orderData.Misc2);
-                        command.Parameters.AddWithValue("Misc3", orderData.Misc3);
-                        command.Parameters.AddWithValue("Misc4", orderData.Misc4);
-                        command.Parameters.AddWithValue("Misc5", orderData.Misc5);
+                        command.Parameters.AddWithValue("Side", orderData.Side);
 
                         command.CommandText = sbSql.ToString();
                         command.CommandType = CommandType.Text;

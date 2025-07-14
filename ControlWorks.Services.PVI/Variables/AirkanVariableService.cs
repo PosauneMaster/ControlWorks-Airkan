@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ControlWorks.Common;
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
@@ -15,6 +17,9 @@ using BR.AN.PviServices;
 using ControlWorks.Services.PVI.Models;
 
 using Newtonsoft.Json;
+
+using System.Text.RegularExpressions;
+using Exception = BR.AN.PviServices.Exception;
 
 namespace ControlWorks.Services.PVI.Variables
 {
@@ -77,6 +82,36 @@ namespace ControlWorks.Services.PVI.Variables
             }
         }
 
+        public class NetworkConnection
+        {
+            public static void MapShare(string networkPath, string username, string password)
+            {
+                var psi = new ProcessStartInfo("net", $"use \"{networkPath}\" /user:{username} {password}")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                using (var process = Process.Start(psi))
+                {
+                    process.WaitForExit();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    if ((process.ExitCode != 0) && (process.ExitCode != 1219))
+                    {
+                        Trace.TraceError($"Failed to map network drive: {error}");
+                    }
+                    else
+                    {
+                        Trace.TraceInformation($"Mapped drive {networkPath}");
+                    }
+                }
+            }
+        }
+
         private List<string> GetFiles()
         {
             var list = new List<string>();
@@ -89,6 +124,12 @@ namespace ControlWorks.Services.PVI.Variables
                 Trace.TraceInformation($"FileTransferLocation={_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)}");
                 // true = USB false = Network
                 string directoryPath;
+                string fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
+
+                string printerPath = GetFileLocationPrinter(_cpu);
+
+                NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+
                 if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
                     Trace.TraceInformation("Switching file location to USB");
@@ -99,31 +140,38 @@ namespace ControlWorks.Services.PVI.Variables
                         if (d.DriveType == DriveType.Removable && d.IsReady)
                         {
                             Trace.TraceInformation($"Reading from USB Drive {d.Name}");
+                            var allowedExtensions = new[] { ".txt", ".csv", ".dat" };
                             directoryPath = d.RootDirectory.FullName;
-                            var files = d.RootDirectory.GetFiles();
+                            var files = d.RootDirectory.GetFiles()
+                                .Where(f => allowedExtensions.Contains(f.Extension, StringComparer.OrdinalIgnoreCase))
+                                .OrderBy(f => f.Name)
+                                .Take(20);
+
+                            foreach (var fi in files)
                             {
-                                foreach (var fi in files)
-                                {
-                                    if (fi.Extension == ".txt" || fi.Extension == ".csv" || fi.Extension == ".dat")
-                                    {
-                                        list.Add(fi.Name);
-                                    }
-                                }
+                                list.Add(fi.Name);
                             }
+                            break;
                         }
                     }
                 }
                 else
                 {
-                    directoryPath = GetFileLocationJobs();
+                    directoryPath = GetFileLocationJobs(_cpu);
+                    NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
+                        var allowedExtensions = new[] { ".txt", ".csv", ".dat" };
                         var di = new DirectoryInfo(directoryPath);
                         var fileNames = Directory
                             .GetFiles(directoryPath)
-                            .Where(f => f.EndsWith(".csv") || f.EndsWith(".txt") || f.EndsWith(".dat"))
-                            .ToList();
+                            .Where(f => allowedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+                            .Select(f => new FileInfo(f))
+                            .OrderBy(f => f.Name)
+                            .Take(20)
+                            .Select(f => f.FullName)  // convert back to string paths
+                            .ToArray();
 
                         Trace.TraceInformation("Switching file location to Network");
 
@@ -133,7 +181,6 @@ namespace ControlWorks.Services.PVI.Variables
                             var name = fi.Name;
                             list.Add(name);
                         }
-
                     }
                     else
                     {
@@ -178,15 +225,40 @@ namespace ControlWorks.Services.PVI.Variables
             };
         }
 
-        private string GetFileLocationJobs()
+        private string GetFileLocationJobs(Cpu cpu)
         {
-            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+            if (cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)) 
             {
-                return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+                DriveInfo[] allDrives = DriveInfo.GetDrives();
+
+                foreach (DriveInfo d in allDrives)
+                {
+                    if (d.DriveType == DriveType.Removable && d.IsReady)
+                    {
+                        return d.RootDirectory.FullName;
+                    }
+                }
+            }
+            else
+            {
+                if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationJobs"))
+                {
+                    return _cpu.Tasks["DataTransf"].Variables["FileLocationJobs"].Value.ToString(CultureInfo.InvariantCulture);
+                }
             }
 
             return String.Empty;
 
+        }
+
+        private string GetFileLocationPrinter(Cpu cpu)
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
+            {
+                return _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return String.Empty;
         }
 
         private void SetFiles()
@@ -218,7 +290,7 @@ namespace ControlWorks.Services.PVI.Variables
             }
             catch (System.Exception e)
             {
-                Trace.TraceError(e.Message);
+                Trace.TraceError(e.ToString());
             }
         }
 
@@ -319,8 +391,9 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
                 {
-                    var filename = $"{customerOrderErp}_{DateTime.Now:yyyyMMddHHmmss}.csv";
-                    var location = _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+                    var cleanName = Regex.Replace(customerOrderErp, @"[<>:""/\\|?*]", "_");
+                    var filename = $"{cleanName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
+                    var location = GetFileLocationPrinter(_cpu);
 
                     if (!Directory.Exists(location))
                     {
@@ -332,6 +405,10 @@ namespace ControlWorks.Services.PVI.Variables
                         var path = Path.Combine(location, filename);
                         File.WriteAllText(path, sb.ToString());
                         Trace.TraceInformation($"Print file sent to {path}");
+                    }
+                    else
+                    {
+                        Trace.TraceError($"Unable to write file: {filename} to {location}");
                     }
                 }
 
@@ -350,16 +427,23 @@ namespace ControlWorks.Services.PVI.Variables
             {
                 if (variable.Name == "SendToPrinter")
                 {
-                    if (variable.Value.ToBoolean(null) == true)
+                    try
                     {
-                        var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
-                        
-                        var result = PrintData(printDataVariable);
-                        if (result)
+                        if (variable.Value.ToBoolean(null) == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var printDataVariable = _cpu.Tasks["DataTransf"].Variables["PrintData"];
+
+                            var result = PrintData(printDataVariable);
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Print Data Failed. {ex.Message}\n{ex}");
                     }
                 }
 
@@ -374,28 +458,42 @@ namespace ControlWorks.Services.PVI.Variables
 
                 if (variable.Name == "ProductFinished")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        Trace.TraceInformation("Product Finished received as true");
-
-                        var result = WriteToProductionDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            Trace.TraceInformation("Product Finished received as true");
+
+                            var result = WriteToProductionDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To ProductionData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
                 if (variable.Name == "SendOrderData")
                 {
-                    if (variable.Value == true)
+                    try
                     {
-                        var result = WriteToOrderDataDatabase();
-                        if (result)
+                        if (variable.Value == true)
                         {
-                            variable.Value.Assign(false);
-                            variable.WriteValue();
+                            var result = WriteToOrderDataDatabase();
+                            if (result)
+                            {
+                                variable.Value.Assign(false);
+                                variable.WriteValue();
+                            }
                         }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Trace.TraceError($"Write To OrderData Database Failed. {ex.Message}\n{ex}");
                     }
                 }
 
@@ -410,6 +508,17 @@ namespace ControlWorks.Services.PVI.Variables
 
                 }
 
+                if (variable.Name == "DeleteFile")
+                {
+                    if (variable.Value == true)
+                    {
+                        var result = FileNameToDelete();
+                        {
+                            variable.Value.Assign(false);
+                            variable.WriteValue();
+                        }
+                    }
+                }
             }
         }
 
@@ -448,7 +557,8 @@ namespace ControlWorks.Services.PVI.Variables
 
                 Trace.TraceInformation("Write Production Data to database");
                 var service = new DatabaseService();
-                return service.WriteToProductionData(productionData);
+                return service.WriteToOrderData(productionData);
+                // return service.WriteToProductionData(productionData);
             }
 
             Trace.TraceInformation("ProductionData variable is not found");
@@ -468,6 +578,24 @@ namespace ControlWorks.Services.PVI.Variables
                     ProcessInputFile(path, _cpu);
                 }
             }
+        }
+
+        public bool FileNameToDelete()
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileNameToLoad"))
+            {
+                var sendToDisplayVariable = _cpu.Tasks["DataTransf"].Variables["FileNameToLoad"];
+                var index = sendToDisplayVariable.Value.ToInt32(null);
+                if (_inputFiles.TryGetValue(index, out var path))
+                {
+                    Trace.TraceInformation($"Deleting Index {index} {path}");
+                    return DeleteInputFile(path, _cpu);
+                }
+
+                return false;
+            }
+
+            return false;
         }
 
         public CommandStatus ProcessCommand(Cpu cpu, string commandName, string commandData)
@@ -779,7 +907,7 @@ namespace ControlWorks.Services.PVI.Variables
         public void ProcessInputFile(string filePath, Cpu cpu)
         {
             ClearDataTransfer();
-            var directoryPath = GetFileLocationJobs();
+            var directoryPath = GetFileLocationJobs(cpu);
             var fi = new FileInfo(filePath);
             var fullPath = Path.Combine(directoryPath, fi.Name);
 
@@ -836,6 +964,8 @@ namespace ControlWorks.Services.PVI.Variables
                         list.Add(dataTransfer.Members[i]["NeoPrintData"]["PieceNumberERP"].AssignChecked(split[28]));
                         list.Add(dataTransfer.Members[i]["CustomerInfo"]["CustomerAddress"].AssignChecked(split[29]));
                         list.Add(dataTransfer.Members[i]["CustomerInfo"]["CustomerName"].AssignChecked(split[30]));
+                        list.Add(dataTransfer.Members[i]["NeoPrintData"]["ConnTypeR"].AssignChecked(split[31]));
+                        list.Add(dataTransfer.Members[i]["NeoPrintData"]["ConnTypeL"].AssignChecked(split[32]));
                     }
                 }
             }
@@ -843,12 +973,28 @@ namespace ControlWorks.Services.PVI.Variables
             if (list.TrueForAll(v => v))
             {
                 dataTransfer.WriteValue();
-                Trace.TraceInformation($"File {filePath} processed without errors");
+                Trace.TraceInformation($"File {filePath} processed without errors!");
             }
             else
             {
                 Trace.TraceError($"File {filePath} not processed.  Invalid data detected");
             }
+        }
+
+        public bool DeleteInputFile(string filePath, Cpu cpu)
+        {
+            var directoryPath = GetFileLocationJobs(cpu);
+            var fi = new FileInfo(filePath);
+            var fullPath = Path.Combine(directoryPath, fi.Name);
+
+            if (!File.Exists(fullPath))
+            {
+                Trace.TraceError($"File {fullPath} not found.");
+                return false;
+            }
+
+            File.Delete(fullPath);
+            return true;
         }
     }
 
