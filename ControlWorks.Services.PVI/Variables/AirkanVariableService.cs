@@ -99,7 +99,7 @@ namespace ControlWorks.Services.PVI.Variables
                     string output = process.StandardOutput.ReadToEnd();
                     string error = process.StandardError.ReadToEnd();
 
-                    if (process.ExitCode != 0)
+                    if ((process.ExitCode != 0) && (process.ExitCode != 1219))
                     {
                         Trace.TraceError($"Failed to map network drive: {error}");
                     }
@@ -119,6 +119,12 @@ namespace ControlWorks.Services.PVI.Variables
                 Trace.TraceInformation($"FileTransferLocation={_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null)}");
                 // true = USB false = Network
                 string directoryPath;
+                string fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
+
+                string printerPath = GetFileLocationPrinter(_cpu);
+
+                NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
+
                 if (_cpu.Tasks["DataTransf"].Variables["FileTransferLocation"].Value.ToBoolean(null))
                 {
                     Trace.TraceInformation("Switching file location to USB");
@@ -147,14 +153,7 @@ namespace ControlWorks.Services.PVI.Variables
                 else
                 {
                     directoryPath = GetFileLocationJobs(_cpu);
-
-                    var fileServerUsername = @ConfigurationProvider.FileServerDomain + "\\" + @ConfigurationProvider.FileServerUserName;
-
                     NetworkConnection.MapShare(directoryPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
-
-                    var printerPath = "\\\\srvsql1";
-                    Trace.TraceError($"Mapping printer path: {printerPath}");
-                    NetworkConnection.MapShare(printerPath, fileServerUsername, ConfigurationProvider.FileServerPassword);
 
                     if (!String.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
@@ -245,6 +244,16 @@ namespace ControlWorks.Services.PVI.Variables
 
             return String.Empty;
 
+        }
+
+        private string GetFileLocationPrinter(Cpu cpu)
+        {
+            if (_cpu.Tasks["DataTransf"].Variables.ContainsKey("FileLocationPrinter"))
+            {
+                return _cpu.Tasks["DataTransf"].Variables["FileLocationPrinter"].Value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return String.Empty;
         }
 
         private void SetFiles()
