@@ -66,7 +66,7 @@ namespace ControlWorks.Services.Rest
             }
             catch(System.Exception ex)
             {
-
+                Trace.TraceError($"WebApi:Start {ex.Message}", ex);
             }
         }
     }

@@ -6,6 +6,7 @@ using ControlWorks.Services.PVI.Variables;
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ControlWorks.Services.PVI.Impl
 {
@@ -36,25 +37,32 @@ namespace ControlWorks.Services.PVI.Impl
             _eventNotifier = eventNotifier;
         }
 
+
+        private static ManualResetEventSlim _connectWait = new ManualResetEventSlim(false);
         public void ConnectPviService()
         {
+            Trace.TraceInformation($"Connecting PVI...");
 
             _connectionTime = DateTime.Now;
             if (_service == null)
             {
+                Trace.TraceInformation($"New service");
                 _service = new Service(Guid.NewGuid().ToString());
             }
 
+            Trace.TraceInformation($"Connecting status");
             _service.Connected += _service_Connected;
             _service.Disconnected += _service_Disconnected;
             _service.Error += _service_Error;
 
             if (_service.IsConnected == false)
             {
+                Trace.TraceInformation($"Not connected");
                 _service.Connect();
             }
             else
             {
+                Trace.TraceInformation($"Connected");
                 ConnectCpus(_service);
             }
         }
@@ -66,6 +74,7 @@ namespace ControlWorks.Services.PVI.Impl
             {
                 _isConnecting = true;
 
+                Trace.TraceInformation($"Reconnecting status");
                 _service.Connected -= _service_Connected;
                 _service.Disconnected -= _service_Disconnected;
                 _service.Error -= _service_Error;
